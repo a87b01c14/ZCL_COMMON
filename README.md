@@ -1,2 +1,2 @@
 # ZCL_COMMON
-ABAP common method
+ABAP common method/function
