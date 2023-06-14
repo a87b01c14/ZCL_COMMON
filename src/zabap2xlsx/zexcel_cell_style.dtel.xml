@@ -1,0 +1,31 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_DTEL" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <DD04V>
+    <ROLLNAME>ZEXCEL_CELL_STYLE</ROLLNAME>
+    <HEADLEN>16</HEADLEN>
+    <SCRLEN1>10</SCRLEN1>
+    <SCRLEN2>16</SCRLEN2>
+    <SCRLEN3>20</SCRLEN3>
+    <DTELMASTER>E</DTELMASTER>
+    <DATATYPE>RAW</DATATYPE>
+    <LENG>000016</LENG>
+    <OUTPUTLEN>000032</OUTPUTLEN>
+   </DD04V>
+   <I18N_LANGS>
+    <LANGU>E</LANGU>
+   </I18N_LANGS>
+   <DD04_TEXTS>
+    <item>
+     <DDLANGUAGE>E</DDLANGUAGE>
+     <DDTEXT>Style identifier</DDTEXT>
+     <REPTEXT>Style identifier</REPTEXT>
+     <SCRTEXT_S>Style no</SCRTEXT_S>
+     <SCRTEXT_M>Style identifier</SCRTEXT_M>
+     <SCRTEXT_L>Style identifier</SCRTEXT_L>
+    </item>
+   </DD04_TEXTS>
+  </asx:values>
+ </asx:abap>
+</abapGit>

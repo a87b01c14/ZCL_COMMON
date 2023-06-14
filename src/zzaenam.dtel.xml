@@ -1,0 +1,45 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<abapGit version="v1.0.0" serializer="LCL_OBJECT_DTEL" serializer_version="v1.0.0">
+ <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
+  <asx:values>
+   <DD04V>
+    <ROLLNAME>ZZAENAM</ROLLNAME>
+    <DDLANGUAGE>1</DDLANGUAGE>
+    <DOMNAME>ZZAENAM</DOMNAME>
+    <HEADLEN>09</HEADLEN>
+    <SCRLEN1>09</SCRLEN1>
+    <SCRLEN2>09</SCRLEN2>
+    <SCRLEN3>09</SCRLEN3>
+    <DDTEXT>更改对象用户的名称</DDTEXT>
+    <REPTEXT>更改对象用户的名称</REPTEXT>
+    <SCRTEXT_S>更改对象用户的名称</SCRTEXT_S>
+    <SCRTEXT_M>更改对象用户的名称</SCRTEXT_M>
+    <SCRTEXT_L>更改对象用户的名称</SCRTEXT_L>
+    <DTELMASTER>1</DTELMASTER>
+    <REFKIND>D</REFKIND>
+   </DD04V>
+   <I18N_LANGS>
+    <LANGU>E</LANGU>
+    <LANGU>쁩</LANGU>
+   </I18N_LANGS>
+   <DD04_TEXTS>
+    <item>
+     <DDLANGUAGE>E</DDLANGUAGE>
+     <DDTEXT>Change the name</DDTEXT>
+     <REPTEXT>ChangeNam</REPTEXT>
+     <SCRTEXT_S>ChangeNam</SCRTEXT_S>
+     <SCRTEXT_M>ChangeNam</SCRTEXT_M>
+     <SCRTEXT_L>ChangeNam</SCRTEXT_L>
+    </item>
+    <item>
+     <DDLANGUAGE>쁩</DDLANGUAGE>
+     <DDTEXT>Thay đổi tên của người dùng mục tiêu</DDTEXT>
+     <REPTEXT>Thay đổi</REPTEXT>
+     <SCRTEXT_S>Thay đổi</SCRTEXT_S>
+     <SCRTEXT_M>Thay đổi</SCRTEXT_M>
+     <SCRTEXT_L>Thay đổi</SCRTEXT_L>
+    </item>
+   </DD04_TEXTS>
+  </asx:values>
+ </asx:abap>
+</abapGit>
