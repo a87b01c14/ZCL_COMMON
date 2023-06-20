@@ -98,15 +98,29 @@ public section.
       value(BUKRS) type BUKRS default '    '
       value(GJAHR) type GJAHR default '0000'
       value(VBELN) type VBUK-VBELN .
+  class-methods DISPLAY_BP
+    importing
+      !IV_PARTNER type BUT000-PARTNER .
   class-methods DISPLAY_CO
     importing
       !AUFNR type AUFNR .
+  class-methods DISPLAY_IDOC
+    importing
+      !IV_DOCNUM type EDIDC-DOCNUM .
   class-methods ADD_ROLE
     importing
       !IV_USERNAME type BAPIBNAME-BAPIBNAME
       !IT_ROLES type SUID_TT_BAPIAGR
     returning
       value(RETURN) type TT_BAPIRET2 .
+  class-methods SWC_CALL_METHOD
+    importing
+      value(OBJTYPE) type SWOTOBJID-OBJTYPE optional
+      value(OBJKEY) type SWOTOBJID-OBJKEY optional
+      value(OBJECT) type SWOTRTIME-OBJECT optional
+      value(METHOD) type SWO_METHOD
+    returning
+      value(RETURN) type SWOTRETURN .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -1312,5 +1326,40 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       TABLES
         activitygroups = lt_new_roles
         return         = return.
+  ENDMETHOD.
+
+
+  METHOD swc_call_method.
+    DATA: container TYPE swconttab.
+    IF NOT object IS SUPPLIED.
+      CALL FUNCTION 'SWO_CREATE'
+        EXPORTING
+          objtype = objtype
+          objkey  = objkey
+*         logical_system = swo_%objid-logsys
+        IMPORTING
+          object  = object
+          return  = return.
+    ENDIF.
+    CALL FUNCTION 'SWO_INVOKE'
+      EXPORTING
+        access     = 'C'
+        object     = object
+        verb       = method
+        persistent = ' '
+      IMPORTING
+        return     = return
+      TABLES
+        container  = container.
+  ENDMETHOD.
+
+
+  METHOD display_bp.
+    swc_call_method( objtype = 'BUS1006' objkey = CONV #( iv_partner ) method = 'DISPLAY' ).
+  ENDMETHOD.
+
+
+  METHOD display_idoc.
+    swc_call_method( objtype = 'IDOC' objkey = CONV #( iv_docnum ) method = 'DISPLAY' ).
   ENDMETHOD.
 ENDCLASS.
