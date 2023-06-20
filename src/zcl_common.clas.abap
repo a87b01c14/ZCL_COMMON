@@ -1,106 +1,112 @@
-CLASS zcl_common DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PUBLIC .
+class ZCL_COMMON definition
+  public
+  final
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    CLASS-METHODS authority_check_tcode
-      IMPORTING
-        !tcode TYPE tcode .
-    CLASS-METHODS get_file_name
-      RETURNING
-        VALUE(rv_file) TYPE rlgrap-filename .
-    CLASS-METHODS download_template
-      IMPORTING
-        !iv_objid    TYPE w3objid
-        !iv_filename TYPE rlgrap-filename .
-    CLASS-METHODS upload_excel
-      IMPORTING
-        !iv_filename     TYPE rlgrap-filename
-        !iv_skipped_rows TYPE i
-        !iv_skipped_cols TYPE i
-        !iv_max_col      TYPE i
-        !iv_max_row      TYPE i
-      EXPORTING
-        !et_table        TYPE STANDARD TABLE
-      EXCEPTIONS
-        error
-        conver_error .
-    CLASS-METHODS export_excel
-      IMPORTING
-        !iv_filename TYPE rlgrap-filename
-        !it_table    TYPE STANDARD TABLE
-      RAISING
-        zcx_excel .
-    CLASS-METHODS get_ojb_number
-      IMPORTING
-        !iv_obj       TYPE zeobject
-        !iv_objkey    TYPE zekey
-        !iv_max       TYPE zeseq_max
-        !iv_count     TYPE zecount
-        !iv_obj_d     TYPE zeobject_d
-        !iv_repeat    TYPE zerepeat OPTIONAL
-      RETURNING
-        VALUE(rv_seq) TYPE zeseq .
-    CLASS-METHODS show_progressbar
-      IMPORTING
-        !iv_current TYPE i
-        !iv_total   TYPE i
-        !iv_msg     TYPE string OPTIONAL .
-    CLASS-METHODS open_job
-      IMPORTING
-        !jobname        TYPE tbtcjob-jobname
-      RETURNING
-        VALUE(jobcount) TYPE tbtcjob-jobcount .
-    CLASS-METHODS close_job
-      IMPORTING
-        !jobname  TYPE tbtcjob-jobname
-        !jobcount TYPE tbtcjob-jobcount .
-    CLASS-METHODS am_i_in_job
-      EXPORTING
-        !in_job   TYPE abap_bool
-        !jobcount TYPE btcjobcnt
-        !jobname  TYPE btcjob .
-    CLASS-METHODS rv_call_display_transaction
-      IMPORTING
-        VALUE(bukrs)    TYPE bukrs DEFAULT '    '
-        VALUE(gjahr)    TYPE gjahr DEFAULT '0000'
-        VALUE(lgnum)    TYPE vbfa-lgnum DEFAULT '   '
-        VALUE(posnr)    TYPE vbap-posnr DEFAULT '000000'
-        VALUE(vbeln)    TYPE vbuk-vbeln
-        VALUE(aufnr)    TYPE vbak-aufnr OPTIONAL
-        VALUE(vbtyp)    TYPE vbuk-vbtyp DEFAULT ' '
-        VALUE(fi_appli) TYPE vbfal-appli DEFAULT '  ' .
-    CLASS-METHODS display_sd_doc
-      IMPORTING
-        VALUE(vbeln) TYPE vbuk-vbeln .
-    CLASS-METHODS display_so
-      IMPORTING
-        VALUE(vbeln) TYPE vbuk-vbeln .
-    CLASS-METHODS display_dn
-      IMPORTING
-        VALUE(vbeln) TYPE vbuk-vbeln .
-    CLASS-METHODS display_iv
-      IMPORTING
-        !vbeln TYPE vbuk-vbeln .
-    CLASS-METHODS display_migo
-      IMPORTING
-        !vbeln TYPE vbuk-vbeln .
-    CLASS-METHODS display_pr
-      IMPORTING
-        !vbeln TYPE vbuk-vbeln .
-    CLASS-METHODS display_po
-      IMPORTING
-        !vbeln TYPE vbuk-vbeln .
-    CLASS-METHODS display_fi
-      IMPORTING
-        VALUE(bukrs) TYPE bukrs DEFAULT '    '
-        VALUE(gjahr) TYPE gjahr DEFAULT '0000'
-        VALUE(vbeln) TYPE vbuk-vbeln .
-    CLASS-METHODS display_co
-      IMPORTING
-        !aufnr TYPE aufnr .
+  class-methods AUTHORITY_CHECK_TCODE
+    importing
+      !TCODE type TCODE .
+  class-methods GET_FILE_NAME
+    returning
+      value(RV_FILE) type RLGRAP-FILENAME .
+  class-methods DOWNLOAD_TEMPLATE
+    importing
+      !IV_OBJID type W3OBJID
+      !IV_FILENAME type RLGRAP-FILENAME .
+  class-methods UPLOAD_EXCEL
+    importing
+      !IV_FILENAME type RLGRAP-FILENAME
+      !IV_SKIPPED_ROWS type I
+      !IV_SKIPPED_COLS type I
+      !IV_MAX_COL type I
+      !IV_MAX_ROW type I
+    exporting
+      !ET_TABLE type STANDARD TABLE
+    exceptions
+      ERROR
+      CONVER_ERROR .
+  class-methods EXPORT_EXCEL
+    importing
+      !IV_FILENAME type RLGRAP-FILENAME
+      !IT_TABLE type STANDARD TABLE
+    raising
+      ZCX_EXCEL .
+  class-methods GET_OJB_NUMBER
+    importing
+      !IV_OBJ type ZEOBJECT
+      !IV_OBJKEY type ZEKEY
+      !IV_MAX type ZESEQ_MAX
+      !IV_COUNT type ZECOUNT
+      !IV_OBJ_D type ZEOBJECT_D
+      !IV_REPEAT type ZEREPEAT optional
+    returning
+      value(RV_SEQ) type ZESEQ .
+  class-methods SHOW_PROGRESSBAR
+    importing
+      !IV_CURRENT type I
+      !IV_TOTAL type I
+      !IV_MSG type STRING optional .
+  class-methods OPEN_JOB
+    importing
+      !JOBNAME type TBTCJOB-JOBNAME
+    returning
+      value(JOBCOUNT) type TBTCJOB-JOBCOUNT .
+  class-methods CLOSE_JOB
+    importing
+      !JOBNAME type TBTCJOB-JOBNAME
+      !JOBCOUNT type TBTCJOB-JOBCOUNT .
+  class-methods AM_I_IN_JOB
+    exporting
+      !IN_JOB type ABAP_BOOL
+      !JOBCOUNT type BTCJOBCNT
+      !JOBNAME type BTCJOB .
+  class-methods RV_CALL_DISPLAY_TRANSACTION
+    importing
+      value(BUKRS) type BUKRS default '    '
+      value(GJAHR) type GJAHR default '0000'
+      value(LGNUM) type VBFA-LGNUM default '   '
+      value(POSNR) type VBAP-POSNR default '000000'
+      value(VBELN) type VBUK-VBELN
+      value(AUFNR) type VBAK-AUFNR optional
+      value(VBTYP) type VBUK-VBTYP default ' '
+      value(FI_APPLI) type VBFAL-APPLI default '  ' .
+  class-methods DISPLAY_SD_DOC
+    importing
+      value(VBELN) type VBUK-VBELN .
+  class-methods DISPLAY_SO
+    importing
+      value(VBELN) type VBUK-VBELN .
+  class-methods DISPLAY_DN
+    importing
+      value(VBELN) type VBUK-VBELN .
+  class-methods DISPLAY_IV
+    importing
+      !VBELN type VBUK-VBELN .
+  class-methods DISPLAY_MIGO
+    importing
+      !VBELN type VBUK-VBELN .
+  class-methods DISPLAY_PR
+    importing
+      !VBELN type VBUK-VBELN .
+  class-methods DISPLAY_PO
+    importing
+      !VBELN type VBUK-VBELN .
+  class-methods DISPLAY_FI
+    importing
+      value(BUKRS) type BUKRS default '    '
+      value(GJAHR) type GJAHR default '0000'
+      value(VBELN) type VBUK-VBELN .
+  class-methods DISPLAY_CO
+    importing
+      !AUFNR type AUFNR .
+  class-methods ADD_ROLE
+    importing
+      !IV_USERNAME type BAPIBNAME-BAPIBNAME
+      !IT_ROLES type SUID_TT_BAPIAGR
+    returning
+      value(RETURN) type TT_BAPIRET2 .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -1271,5 +1277,40 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 *       _COLLECT         = ' '
       .
 
+  ENDMETHOD.
+
+
+  METHOD add_role.
+    DATA: lt_old_roles TYPE STANDARD TABLE OF bapiagr.
+    DATA: lt_new_roles TYPE STANDARD TABLE OF bapiagr.
+    DATA: lv_tabix LIKE sy-tabix.
+
+    CALL FUNCTION 'BAPI_USER_GET_DETAIL'
+      EXPORTING
+        username       = iv_username
+      TABLES
+        activitygroups = lt_old_roles
+        return         = return.
+    SORT lt_old_roles BY agr_name.
+
+    LOOP AT it_roles INTO DATA(ls_roles).
+      READ TABLE lt_old_roles WITH KEY  agr_name  = ls_roles-agr_name
+                                        TRANSPORTING NO FIELDS
+                                        BINARY SEARCH.
+      lv_tabix = sy-tabix.
+      IF sy-subrc = 0.
+        DELETE lt_old_roles INDEX lv_tabix.
+      ENDIF.
+    ENDLOOP.
+
+    APPEND LINES OF it_roles TO lt_new_roles.
+    APPEND LINES OF lt_old_roles TO lt_new_roles.
+
+    CALL FUNCTION 'BAPI_USER_ACTGROUPS_ASSIGN'
+      EXPORTING
+        username       = iv_username
+      TABLES
+        activitygroups = lt_new_roles
+        return         = return.
   ENDMETHOD.
 ENDCLASS.
