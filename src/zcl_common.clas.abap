@@ -1,126 +1,143 @@
-class ZCL_COMMON definition
-  public
-  final
-  create public .
+CLASS zcl_common DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
-
-  class-methods AUTHORITY_CHECK_TCODE
-    importing
-      !TCODE type TCODE .
-  class-methods GET_FILE_NAME
-    returning
-      value(RV_FILE) type RLGRAP-FILENAME .
-  class-methods DOWNLOAD_TEMPLATE
-    importing
-      !IV_OBJID type W3OBJID
-      !IV_FILENAME type RLGRAP-FILENAME .
-  class-methods UPLOAD_EXCEL
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-      !IV_SKIPPED_ROWS type I
-      !IV_SKIPPED_COLS type I
-      !IV_MAX_COL type I
-      !IV_MAX_ROW type I
-    exporting
-      !ET_TABLE type STANDARD TABLE
-    exceptions
-      ERROR
-      CONVER_ERROR .
-  class-methods EXPORT_EXCEL
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-      !IT_TABLE type STANDARD TABLE
-    raising
-      ZCX_EXCEL .
-  class-methods GET_OJB_NUMBER
-    importing
-      !IV_OBJ type ZEOBJECT
-      !IV_OBJKEY type ZEKEY
-      !IV_MAX type ZESEQ_MAX
-      !IV_COUNT type ZECOUNT
-      !IV_OBJ_D type ZEOBJECT_D
-      !IV_REPEAT type ZEREPEAT optional
-    returning
-      value(RV_SEQ) type ZESEQ .
-  class-methods SHOW_PROGRESSBAR
-    importing
-      !IV_CURRENT type I
-      !IV_TOTAL type I
-      !IV_MSG type STRING optional .
-  class-methods OPEN_JOB
-    importing
-      !JOBNAME type TBTCJOB-JOBNAME
-    returning
-      value(JOBCOUNT) type TBTCJOB-JOBCOUNT .
-  class-methods CLOSE_JOB
-    importing
-      !JOBNAME type TBTCJOB-JOBNAME
-      !JOBCOUNT type TBTCJOB-JOBCOUNT .
-  class-methods AM_I_IN_JOB
-    exporting
-      !IN_JOB type ABAP_BOOL
-      !JOBCOUNT type BTCJOBCNT
-      !JOBNAME type BTCJOB .
-  class-methods RV_CALL_DISPLAY_TRANSACTION
-    importing
-      value(BUKRS) type BUKRS default '    '
-      value(GJAHR) type GJAHR default '0000'
-      value(LGNUM) type VBFA-LGNUM default '   '
-      value(POSNR) type VBAP-POSNR default '000000'
-      value(VBELN) type VBUK-VBELN
-      value(AUFNR) type VBAK-AUFNR optional
-      value(VBTYP) type VBUK-VBTYP default ' '
-      value(FI_APPLI) type VBFAL-APPLI default '  ' .
-  class-methods DISPLAY_SD_DOC
-    importing
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_SO
-    importing
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_DN
-    importing
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_IV
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_MIGO
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_PR
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_PO
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_FI
-    importing
-      value(BUKRS) type BUKRS default '    '
-      value(GJAHR) type GJAHR default '0000'
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_BP
-    importing
-      !IV_PARTNER type BUT000-PARTNER .
-  class-methods DISPLAY_CO
-    importing
-      !AUFNR type AUFNR .
-  class-methods DISPLAY_IDOC
-    importing
-      !IV_DOCNUM type EDIDC-DOCNUM .
-  class-methods ADD_ROLE
-    importing
-      !IV_USERNAME type BAPIBNAME-BAPIBNAME
-      !IT_ROLES type SUID_TT_BAPIAGR
-    returning
-      value(RETURN) type TT_BAPIRET2 .
-  class-methods SWC_CALL_METHOD
-    importing
-      value(OBJTYPE) type SWOTOBJID-OBJTYPE optional
-      value(OBJKEY) type SWOTOBJID-OBJKEY optional
-      value(OBJECT) type SWOTRTIME-OBJECT optional
-      value(METHOD) type SWO_METHOD
-    returning
-      value(RETURN) type SWOTRETURN .
+  PUBLIC SECTION.
+    TYPES:
+      BEGIN OF ty_billing_return,
+        fkstk   TYPE likp-fkstk,
+        fkivk   TYPE likp-fkivk,
+        return  TYPE bapiret1_t,
+        errors  TYPE /syclo/sd_bapivbrkerrors_tab,
+        success TYPE bapivbrksuccess_t,
+      END OF ty_billing_return .
+    CLASS-METHODS authority_check_tcode
+      IMPORTING
+        !tcode TYPE tcode .
+    CLASS-METHODS get_file_name
+      RETURNING
+        VALUE(rv_file) TYPE rlgrap-filename .
+    CLASS-METHODS download_template
+      IMPORTING
+        !iv_objid    TYPE w3objid
+        !iv_filename TYPE rlgrap-filename .
+    CLASS-METHODS upload_excel
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+        !iv_skipped_rows TYPE i
+        !iv_skipped_cols TYPE i
+        !iv_max_col      TYPE i
+        !iv_max_row      TYPE i
+      EXPORTING
+        !et_table        TYPE STANDARD TABLE
+      EXCEPTIONS
+        error
+        conver_error .
+    CLASS-METHODS export_excel
+      IMPORTING
+        !iv_filename TYPE rlgrap-filename
+        !it_table    TYPE STANDARD TABLE
+      RAISING
+        zcx_excel .
+    CLASS-METHODS get_ojb_number
+      IMPORTING
+        !iv_obj       TYPE zeobject
+        !iv_objkey    TYPE zekey
+        !iv_max       TYPE zeseq_max
+        !iv_count     TYPE zecount
+        !iv_obj_d     TYPE zeobject_d
+        !iv_repeat    TYPE zerepeat OPTIONAL
+      RETURNING
+        VALUE(rv_seq) TYPE zeseq .
+    CLASS-METHODS show_progressbar
+      IMPORTING
+        !iv_current TYPE i
+        !iv_total   TYPE i
+        !iv_msg     TYPE string OPTIONAL .
+    CLASS-METHODS open_job
+      IMPORTING
+        !jobname        TYPE tbtcjob-jobname
+      RETURNING
+        VALUE(jobcount) TYPE tbtcjob-jobcount .
+    CLASS-METHODS close_job
+      IMPORTING
+        !jobname  TYPE tbtcjob-jobname
+        !jobcount TYPE tbtcjob-jobcount .
+    CLASS-METHODS am_i_in_job
+      EXPORTING
+        !in_job   TYPE abap_bool
+        !jobcount TYPE btcjobcnt
+        !jobname  TYPE btcjob .
+    CLASS-METHODS rv_call_display_transaction
+      IMPORTING
+        VALUE(bukrs)    TYPE bukrs DEFAULT '    '
+        VALUE(gjahr)    TYPE gjahr DEFAULT '0000'
+        VALUE(lgnum)    TYPE vbfa-lgnum DEFAULT '   '
+        VALUE(posnr)    TYPE vbap-posnr DEFAULT '000000'
+        VALUE(vbeln)    TYPE vbuk-vbeln
+        VALUE(aufnr)    TYPE vbak-aufnr OPTIONAL
+        VALUE(vbtyp)    TYPE vbuk-vbtyp DEFAULT ' '
+        VALUE(fi_appli) TYPE vbfal-appli DEFAULT '  ' .
+    CLASS-METHODS display_sd_doc
+      IMPORTING
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_so
+      IMPORTING
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_dn
+      IMPORTING
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_iv
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_migo
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_pr
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_po
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_fi
+      IMPORTING
+        VALUE(bukrs) TYPE bukrs DEFAULT '    '
+        VALUE(gjahr) TYPE gjahr DEFAULT '0000'
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_bp
+      IMPORTING
+        !iv_partner TYPE but000-partner .
+    CLASS-METHODS display_co
+      IMPORTING
+        !aufnr TYPE aufnr .
+    CLASS-METHODS display_idoc
+      IMPORTING
+        !iv_docnum TYPE edidc-docnum .
+    CLASS-METHODS add_role
+      IMPORTING
+        !iv_username  TYPE bapibname-bapibname
+        !it_roles     TYPE suid_tt_bapiagr
+      RETURNING
+        VALUE(return) TYPE tt_bapiret2 .
+    CLASS-METHODS swc_call_method
+      IMPORTING
+        VALUE(objtype) TYPE swotobjid-objtype OPTIONAL
+        VALUE(objkey)  TYPE swotobjid-objkey OPTIONAL
+        VALUE(object)  TYPE swotrtime-object OPTIONAL
+        VALUE(method)  TYPE swo_method DEFAULT 'DISPLAY'
+      RETURNING
+        VALUE(return)  TYPE swotreturn .
+    CLASS-METHODS create_billing_by_so
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rv_return) TYPE ty_billing_return .
+    CLASS-METHODS create_billing_by_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rv_return) TYPE ty_billing_return .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -1355,11 +1372,182 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 
 
   METHOD display_bp.
-    swc_call_method( objtype = 'BUS1006' objkey = CONV #( iv_partner ) method = 'DISPLAY' ).
+    swc_call_method( objtype = 'BUS1006' objkey = CONV #( iv_partner ) ).
   ENDMETHOD.
 
 
   METHOD display_idoc.
-    swc_call_method( objtype = 'IDOC' objkey = CONV #( iv_docnum ) method = 'DISPLAY' ).
+    swc_call_method( objtype = 'IDOC' objkey = CONV #( iv_docnum ) ).
+  ENDMETHOD.
+
+
+  METHOD create_billing_by_so.
+    DATA: ls_return TYPE bapiret1.
+    DATA: lt_return TYPE STANDARD TABLE OF bapiret1.
+    DATA:ls_bapivbrk TYPE bapivbrk,
+         lt_bapivbrk TYPE STANDARD TABLE OF bapivbrk.
+
+    CLEAR: ls_return,lt_return[].
+    DO 10 TIMES.
+      SELECT SINGLE vbeln,fksak FROM vbak INTO @DATA(ls_vbak) WHERE vbeln = @iv_vbeln.
+      IF sy-subrc = 0.
+        EXIT.
+      ELSE.
+        WAIT UP TO '0.5' SECONDS.
+      ENDIF.
+    ENDDO.
+    "销售单不存在
+    IF ls_vbak IS INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '002' message_v1 = iv_vbeln ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1.
+      APPEND ls_return TO lt_return.
+      rv_return = VALUE #( return = lt_return ).
+      RETURN.
+    ENDIF.
+    SELECT SINGLE vbeln,fkdat,vbtyp FROM vkdfs INTO @DATA(ls_vkdfs) WHERE vbeln = @iv_vbeln.
+    "无需开票
+    IF ls_vkdfs IS INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'S' id = 'VF' number = '016' ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message.
+      APPEND ls_return TO lt_return.
+      rv_return = VALUE #( return = lt_return ).
+      RETURN.
+    ENDIF.
+    "已完全开票项
+    IF ls_vbak-fksak = 'C'.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VF' number = '017' ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message .
+      APPEND ls_return TO lt_return.
+      rv_return = VALUE #( return = lt_return ).
+      RETURN.
+    ENDIF.
+    SELECT vbeln,posnr FROM vbap INTO TABLE @DATA(lt_vbap) WHERE vbeln = @iv_vbeln.
+
+    LOOP AT lt_vbap INTO DATA(ls_vbap).
+      ls_bapivbrk-bill_date     = ls_vkdfs-fkdat.
+      ls_bapivbrk-ref_doc       = ls_vbap-vbeln.
+      ls_bapivbrk-ref_item      = ls_vbap-posnr.
+      ls_bapivbrk-doc_number    = ls_vbap-vbeln.
+      ls_bapivbrk-itm_number    = ls_vbap-posnr.
+      ls_bapivbrk-ref_doc_ca    = 'C'.
+      APPEND ls_bapivbrk TO lt_bapivbrk.
+      CLEAR ls_bapivbrk.
+    ENDLOOP.
+
+    CALL FUNCTION 'BAPI_BILLINGDOC_CREATEMULTIPLE'
+      EXPORTING
+        testrun       = ''
+      TABLES
+        billingdatain = lt_bapivbrk
+        return        = rv_return-return
+        errors        = rv_return-errors
+        success       = rv_return-success.
+
+    READ TABLE rv_return-success INTO DATA(ls_success) INDEX 1.
+    IF sy-subrc = 0 AND ls_success-bill_doc IS NOT INITIAL.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+      "查底表，确认更新完毕
+      DO 10 TIMES.
+        SELECT SINGLE @abap_true FROM vbrk INTO @DATA(lv_exists) WHERE vbeln = @ls_success-bill_doc.
+        IF sy-subrc = 0.
+          EXIT.
+        ELSE.
+          WAIT UP TO '0.5' SECONDS.
+        ENDIF.
+      ENDDO.
+    ELSE.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD create_billing_by_dn.
+    DATA: ls_return TYPE bapiret1.
+    DATA: lt_return TYPE STANDARD TABLE OF bapiret1.
+    DATA:ls_bapivbrk TYPE bapivbrk,
+         lt_bapivbrk TYPE STANDARD TABLE OF bapivbrk.
+
+    CLEAR: ls_return,lt_return[].
+    DO 10 TIMES.
+      SELECT SINGLE vbeln,wadat,vbtyp,fkivk,fkstk FROM likp INTO @DATA(ls_likp) WHERE vbeln = @iv_vbeln.
+      IF sy-subrc = 0.
+        EXIT.
+      ELSE.
+        WAIT UP TO '0.5' SECONDS.
+      ENDIF.
+    ENDDO.
+    "交货单不存在
+    IF ls_likp IS INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '002' message_v1 = iv_vbeln ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1.
+      APPEND ls_return TO lt_return.
+      rv_return = VALUE #( return = lt_return ).
+      RETURN.
+    ENDIF.
+    rv_return-fkivk = ls_likp-fkivk.
+    rv_return-fkstk = ls_likp-fkstk.
+    "无需开票
+    IF ls_likp-fkivk IS INITIAL AND ls_likp-fkstk IS INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'S' id = 'VF' number = '016' ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message.
+      APPEND ls_return TO lt_return.
+      rv_return = VALUE #( return = lt_return ).
+      RETURN.
+    ENDIF.
+    "已完全开票项
+    IF ls_likp-fkivk = 'C' OR ( ls_likp-fkstk = 'C' AND ls_likp-fkivk IS INITIAL ).
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VF' number = '017' ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message .
+      APPEND ls_return TO lt_return.
+      rv_return = VALUE #( return = lt_return ).
+      RETURN.
+    ENDIF.
+    SELECT vbeln,posnr FROM lips INTO TABLE @DATA(lt_lips) WHERE vbeln = @iv_vbeln.
+
+    LOOP AT lt_lips INTO DATA(ls_lips).
+      ls_bapivbrk-ref_doc     = ls_lips-vbeln.
+      ls_bapivbrk-ref_item    = ls_lips-posnr.
+      ls_bapivbrk-doc_number  = ls_lips-vbeln.
+      ls_bapivbrk-itm_number  = ls_lips-posnr.
+      ls_bapivbrk-ref_doc_ca  = 'J'.
+      ls_bapivbrk-serv_date   = ls_likp-wadat.
+      APPEND ls_bapivbrk TO lt_bapivbrk.
+      CLEAR ls_bapivbrk.
+    ENDLOOP.
+
+    CALL FUNCTION 'BAPI_BILLINGDOC_CREATEMULTIPLE'
+      EXPORTING
+        testrun       = ''
+      TABLES
+        billingdatain = lt_bapivbrk
+        return        = rv_return-return
+        errors        = rv_return-errors
+        success       = rv_return-success.
+
+    READ TABLE rv_return-success INTO DATA(ls_success) INDEX 1.
+    IF sy-subrc = 0 AND ls_success-bill_doc IS NOT INITIAL.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+      "查底表，确认更新完毕
+      DO 10 TIMES.
+        SELECT SINGLE @abap_true FROM vbrk INTO @DATA(lv_exists) WHERE vbeln = @ls_success-bill_doc.
+        IF sy-subrc = 0.
+          EXIT.
+        ELSE.
+          WAIT UP TO '0.5' SECONDS.
+        ENDIF.
+      ENDDO.
+    ELSE.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
