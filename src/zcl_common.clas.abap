@@ -6,11 +6,13 @@ CLASS zcl_common DEFINITION
   PUBLIC SECTION.
     TYPES:
       BEGIN OF ty_billing_return,
-        fkstk   TYPE likp-fkstk,
-        fkivk   TYPE likp-fkivk,
-        return  TYPE bapiret1_t,
-        errors  TYPE /syclo/sd_bapivbrkerrors_tab,
-        success TYPE bapivbrksuccess_t,
+        fkstk     TYPE likp-fkstk,
+        fkivk     TYPE likp-fkivk,
+        fkstk_ret TYPE likp-fkstk, "BAPI后交货开票状态
+        fkivk_ret TYPE likp-fkivk, "BAPI后公司间开票状态
+        return    TYPE bapiret1_t,
+        errors    TYPE /syclo/sd_bapivbrkerrors_tab,
+        success   TYPE bapivbrksuccess_t,
       END OF ty_billing_return .
     CLASS-METHODS authority_check_tcode
       IMPORTING
@@ -1537,14 +1539,20 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
         EXPORTING
           wait = 'X'.
-      "查底表，确认更新完毕
-      DO 10 TIMES.
-        SELECT SINGLE @abap_true FROM vbrk INTO @DATA(lv_exists) WHERE vbeln = @ls_success-bill_doc.
-        IF sy-subrc = 0.
-          EXIT.
+      "查底表，确认更新完毕,最大等10分钟
+      DO 600 TIMES.
+*      SELECT SINGLE @abap_true FROM vbrk INTO @DATA(lv_exists) WHERE vbeln = @ls_success-bill_doc.
+        SELECT SINGLE fkstk,fkivk FROM likp INTO ( @rv_return-fkstk_ret,@rv_return-fkivk_ret ) WHERE vbeln = @iv_vbeln.
+        IF rv_return-fkstk IS NOT INITIAL AND rv_return-fkstk <> 'C'.
+          IF rv_return-fkstk_ret = 'C'.
+            EXIT.
+          ENDIF.
         ELSE.
-          WAIT UP TO '0.5' SECONDS.
+          IF rv_return-fkivk_ret = 'C'.
+            EXIT.
+          ENDIF.
         ENDIF.
+        WAIT UP TO 1 SECONDS.
       ENDDO.
     ELSE.
       CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
