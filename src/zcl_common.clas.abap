@@ -1454,12 +1454,12 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         EXPORTING
           wait = 'X'.
       "查底表，确认更新完毕
-      DO 10 TIMES.
-        SELECT SINGLE @abap_true FROM vbrk INTO @DATA(lv_exists) WHERE vbeln = @ls_success-bill_doc.
+      DO 600 TIMES.
+        SELECT SINGLE @abap_true FROM vbak INTO @DATA(lv_exists) WHERE vbeln = @iv_vbeln AND fksak = 'C'.
         IF sy-subrc = 0.
           EXIT.
         ELSE.
-          WAIT UP TO '0.5' SECONDS.
+          WAIT UP TO 1 SECONDS.
         ENDIF.
       ENDDO.
     ELSE.
