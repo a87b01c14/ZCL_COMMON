@@ -1489,7 +1489,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       ls_return = VALUE #( type = 'E' id = 'VL' number = '002' message_v1 = iv_vbeln ).
       MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1.
       APPEND ls_return TO lt_return.
-      rv_return = VALUE #( return = lt_return ).
+      rv_return-return = lt_return .
       RETURN.
     ENDIF.
     rv_return-fkivk = ls_likp-fkivk.
@@ -1500,7 +1500,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       ls_return = VALUE #( type = 'S' id = 'VF' number = '016' ).
       MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message.
       APPEND ls_return TO lt_return.
-      rv_return = VALUE #( return = lt_return ).
+      rv_return-return = lt_return .
       RETURN.
     ENDIF.
     "已完全开票项
@@ -1509,7 +1509,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       ls_return = VALUE #( type = 'E' id = 'VF' number = '017' ).
       MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message .
       APPEND ls_return TO lt_return.
-      rv_return = VALUE #( return = lt_return ).
+      rv_return-return = lt_return .
       RETURN.
     ENDIF.
     SELECT vbeln,posnr FROM lips INTO TABLE @DATA(lt_lips) WHERE vbeln = @iv_vbeln.
