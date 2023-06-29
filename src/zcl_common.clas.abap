@@ -4,6 +4,7 @@ CLASS zcl_common DEFINITION
   CREATE PUBLIC .
 
   PUBLIC SECTION.
+
     TYPES:
       BEGIN OF ty_billing_return,
         fkstk     TYPE likp-fkstk,
@@ -14,6 +15,20 @@ CLASS zcl_common DEFINITION
         errors    TYPE /syclo/sd_bapivbrkerrors_tab,
         success   TYPE bapivbrksuccess_t,
       END OF ty_billing_return .
+    TYPES:
+      BEGIN OF ty_dn_return,
+        vbeln  TYPE vbeln_vl,
+        return TYPE bapiret2_t,
+      END OF ty_dn_return .
+    TYPES:
+      BEGIN OF ty_dn_post_return,
+        mblnr  TYPE mblnr,
+        mjahr  TYPE mjahr,
+        return TYPE bapiret2_t,
+      END OF ty_dn_post_return .
+    TYPES:
+      tt_posnr TYPE STANDARD TABLE OF /cwm/r_posnr .
+
     CLASS-METHODS authority_check_tcode
       IMPORTING
         !tcode TYPE tcode .
@@ -140,13 +155,47 @@ CLASS zcl_common DEFINITION
         VALUE(iv_vbeln)  TYPE vbeln
       RETURNING
         VALUE(rv_return) TYPE ty_billing_return .
+    CLASS-METHODS create_so_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rv_return) TYPE ty_dn_return .
+    CLASS-METHODS create_sto_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rv_return) TYPE ty_dn_return .
+    CLASS-METHODS post_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE likp-vbeln
+        !iv_budat        TYPE budat OPTIONAL
+        !iv_reslo        TYPE reslo OPTIONAL
+      RETURNING
+        VALUE(rv_return) TYPE ty_dn_post_return .
+    CLASS-METHODS reverse_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE likp-vbeln
+        !iv_budat        TYPE budat OPTIONAL
+      RETURNING
+        VALUE(rv_return) TYPE ty_dn_post_return .
+    CLASS-METHODS delete_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE likp-vbeln
+      RETURNING
+        VALUE(rv_return) TYPE bapiret2_t .
+    CLASS-METHODS delete_so
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbak-vbeln
+        !it_posnr        TYPE tt_posnr OPTIONAL
+      RETURNING
+        VALUE(rv_return) TYPE bapiret2_t .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_COMMON IMPLEMENTATION.
+CLASS zcl_common IMPLEMENTATION.
 
 
   METHOD am_i_in_job.
@@ -1554,6 +1603,519 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         ENDIF.
         WAIT UP TO 1 SECONDS.
       ENDDO.
+    ELSE.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD create_so_dn.
+    DATA: lv_due_date   TYPE bapidlvcreateheader-due_date,
+          ls_dn_items   TYPE bapidlvreftosalesorder,
+          lt_dn_items   TYPE TABLE OF bapidlvreftosalesorder,
+          ls_return     TYPE bapiret2,
+          lv_dn_number  TYPE bapishpdelivnumb-deliv_numb,
+          lv_ship_point TYPE bapidlvcreateheader-ship_point.
+
+    CLEAR: ls_return,ls_dn_items,lt_dn_items[].
+    DO 10 TIMES.
+      SELECT SINGLE vbeln,lfgsk FROM vbakuk INTO @DATA(ls_vbakuk) WHERE vbeln = @iv_vbeln.
+      IF sy-subrc = 0.
+        EXIT.
+      ELSE.
+        WAIT UP TO '0.5' SECONDS.
+      ENDIF.
+    ENDDO.
+    "销售单不存在
+    IF ls_vbakuk IS INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '002' message_v1 = iv_vbeln ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1.
+      APPEND ls_return TO rv_return-return.
+      RETURN.
+    ENDIF.
+    "无需交货
+    IF ls_vbakuk-lfgsk IS INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'S' id = 'VL' number = '461' ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message.
+      APPEND ls_return TO rv_return-return.
+      RETURN.
+    ENDIF.
+    "已完全交货
+    IF ls_vbakuk-lfgsk = 'C'.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '455' ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message .
+      APPEND ls_return TO rv_return-return.
+      RETURN.
+    ENDIF.
+
+    SELECT vbeln,posnr,kwmeng,vrkme FROM vbap INTO TABLE @DATA(lt_vbap) WHERE vbeln = @iv_vbeln.
+
+    LOOP AT lt_vbap INTO DATA(ls_vbap).
+      CLEAR ls_dn_items.
+      ls_dn_items-ref_doc    = ls_vbap-vbeln.
+      ls_dn_items-ref_item   = ls_vbap-posnr.
+      ls_dn_items-dlv_qty    = ls_vbap-kwmeng.
+      ls_dn_items-sales_unit = ls_vbap-vrkme.
+      APPEND ls_dn_items TO lt_dn_items.
+    ENDLOOP.
+*    ship_point = '1000'.
+    lv_due_date = '99991231'.
+    CALL FUNCTION 'BAPI_OUTB_DELIVERY_CREATE_SLS'
+      EXPORTING
+*       ship_point        = ship_point
+        due_date          = lv_due_date
+      IMPORTING
+        delivery          = rv_return-vbeln
+      TABLES
+        sales_order_items = lt_dn_items
+        return            = rv_return-return.
+
+    LOOP AT rv_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+      EXIT.
+    ENDLOOP.
+    IF sy-subrc <> 0 AND rv_return-vbeln IS NOT INITIAL.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+      "查底表，确认更新完毕
+      DO 600 TIMES.
+        SELECT SINGLE @abap_true FROM likp INTO @DATA(lv_exists) WHERE vbeln = @rv_return-vbeln.
+        IF sy-subrc = 0.
+          EXIT.
+        ELSE.
+          WAIT UP TO 1 SECONDS.
+        ENDIF.
+      ENDDO.
+    ELSE.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD create_sto_dn.
+    DATA: lv_due_date   TYPE bapidlvcreateheader-due_date,
+          ls_dn_items   TYPE bapidlvreftosto,
+          lt_dn_items   TYPE TABLE OF bapidlvreftosto,
+          ls_return     TYPE bapiret2,
+          lv_dn_number  TYPE bapishpdelivnumb-deliv_numb,
+          lv_ship_point TYPE bapidlvcreateheader-ship_point.
+
+    CLEAR: ls_return,ls_dn_items,lt_dn_items[].
+    DO 10 TIMES.
+      SELECT SINGLE ebeln FROM ekko INTO @DATA(ls_ekko) WHERE ebeln = @iv_vbeln.
+      IF sy-subrc = 0.
+        EXIT.
+      ELSE.
+        WAIT UP TO '0.5' SECONDS.
+      ENDIF.
+    ENDDO.
+    "STO单不存在
+    IF ls_ekko IS INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '002' message_v1 = iv_vbeln ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1.
+      APPEND ls_return TO rv_return-return.
+      RETURN.
+    ENDIF.
+    SELECT SINGLE vbeln FROM vetvg INTO @DATA(ls_vetvg) WHERE vbeln = @iv_vbeln.
+    "无需交货或交货完成
+    IF ls_vetvg IS INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '455' ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message .
+      APPEND ls_return TO rv_return-return.
+      RETURN.
+    ENDIF.
+
+    SELECT ebeln,ebelp,menge,meins FROM ekpo INTO TABLE @DATA(lt_ekpo) WHERE ebeln = @iv_vbeln.
+
+    LOOP AT lt_ekpo INTO DATA(ls_ekpo).
+      CLEAR ls_dn_items.
+      ls_dn_items-ref_doc    = ls_ekpo-ebeln.
+      ls_dn_items-ref_item   = ls_ekpo-ebelp.
+      ls_dn_items-dlv_qty    = ls_ekpo-menge.
+      ls_dn_items-sales_unit = ls_ekpo-meins.
+      APPEND ls_dn_items TO lt_dn_items.
+    ENDLOOP.
+*    ship_point = '1000'.
+    lv_due_date = '99991231'.
+    CALL FUNCTION 'BAPI_OUTB_DELIVERY_CREATE_STO'
+      EXPORTING
+*       ship_point        = ship_point
+        due_date          = lv_due_date
+      IMPORTING
+        delivery          = rv_return-vbeln
+      TABLES
+        stock_trans_items = lt_dn_items
+*       created_items     = lt_created_items[]
+        return            = rv_return-return.
+
+    LOOP AT rv_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+      EXIT.
+    ENDLOOP.
+    IF sy-subrc <> 0 AND rv_return-vbeln IS NOT INITIAL.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+      "查底表，确认更新完毕
+      DO 600 TIMES.
+        SELECT SINGLE @abap_true FROM likp INTO @DATA(lv_exists) WHERE vbeln = @rv_return-vbeln.
+        IF sy-subrc = 0.
+          EXIT.
+        ELSE.
+          WAIT UP TO 1 SECONDS.
+        ENDIF.
+      ENDDO.
+    ELSE.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD post_dn.
+    DATA: ls_return           TYPE bapiret2,
+          ls_header_data      TYPE bapiobdlvhdrcon,
+          ls_header_control   TYPE bapiobdlvhdrctrlcon,
+          lt_header_deadlines TYPE STANDARD TABLE OF bapidlvdeadln,
+          lt_item_data        TYPE STANDARD TABLE OF bapiobdlvitemcon,
+          ls_item_data        TYPE bapiobdlvitemcon,
+          lt_item_control     TYPE STANDARD TABLE OF bapiobdlvitemctrlcon,
+          ls_item_control     TYPE bapiobdlvitemctrlcon,
+          lt_item_spl         TYPE TABLE OF /spe/bapiobdlvitemconf,
+          ls_item_spl         TYPE /spe/bapiobdlvitemconf.
+    DATA: lv_timestamp_utc TYPE tzntstmps.
+    CLEAR: ls_return.
+    DO 10 TIMES.
+      SELECT SINGLE vbeln,wbstk,wadat FROM likpuk INTO @DATA(ls_likp) WHERE vbeln = @iv_vbeln.
+      IF sy-subrc = 0.
+        EXIT.
+      ELSE.
+        WAIT UP TO '0.5' SECONDS.
+      ENDIF.
+    ENDDO.
+    "交货单不存在
+    IF ls_likp IS INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '002' message_v1 = iv_vbeln ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1.
+      APPEND ls_return TO rv_return-return.
+      RETURN.
+    ENDIF.
+    "交货已过账
+    IF ls_likp-wbstk = 'C'.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '602' ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message .
+      APPEND ls_return TO rv_return-return.
+      RETURN.
+    ENDIF.
+
+    SELECT vbeln,posnr,matnr,lfimg,lgmng,charg,lgort,meins,vrkme,umvkz,umvkn FROM lips INTO TABLE @DATA(lt_lips) WHERE vbeln = @iv_vbeln.
+    LOOP AT lt_lips INTO DATA(ls_lips).
+      CLEAR  ls_item_data.
+      ls_item_data-deliv_numb      = iv_vbeln.
+      ls_item_data-deliv_item      = ls_lips-posnr.
+      ls_item_data-material        = ls_lips-matnr.
+      ls_item_data-dlv_qty         = ls_lips-lfimg.
+      ls_item_data-dlv_qty_imunit  = ls_lips-lgmng.
+      ls_item_data-base_uom        = ls_lips-meins.
+      ls_item_data-sales_unit      = ls_lips-vrkme.
+      ls_item_data-fact_unit_nom   = ls_lips-umvkz.
+      ls_item_data-fact_unit_denom = ls_lips-umvkn.
+      ls_item_data-batch           = ls_lips-charg.
+      APPEND ls_item_data TO lt_item_data.
+
+      CLEAR  ls_item_control.
+      ls_item_control-deliv_numb   = iv_vbeln.
+      ls_item_control-deliv_item   = ls_lips-posnr.
+      ls_item_control-chg_delqty   = 'X' .
+      APPEND ls_item_control TO  lt_item_control.
+
+      IF iv_reslo IS SUPPLIED AND iv_reslo IS NOT INITIAL.
+        CLEAR ls_item_spl.
+        ls_item_spl-deliv_numb  = iv_vbeln .
+        ls_item_spl-deliv_item  = ls_lips-posnr .
+        ls_item_spl-stge_loc    = iv_reslo. "更改库位
+        APPEND ls_item_spl TO lt_item_spl.
+      ENDIF.
+
+    ENDLOOP.
+
+    ls_header_data-deliv_numb     = iv_vbeln.
+    ls_header_control-deliv_numb  = iv_vbeln.
+    ls_header_control-post_gi_flg = 'X'.
+    ls_header_control-volume_flg  = 'X'.
+    IF iv_budat IS SUPPLIED AND iv_budat IS NOT INITIAL.
+      ls_likp-wadat = iv_budat.
+    ENDIF.
+    lv_timestamp_utc = |{ ls_likp-wadat }{ sy-uzeit }|.
+    lt_header_deadlines[] = VALUE #( deliv_numb = iv_vbeln
+                                     ( timetype = 'WSHDRLFDAT' timestamp_utc = lv_timestamp_utc )"交货时间
+                                     ( timetype = 'WSHDRWADAT' timestamp_utc = lv_timestamp_utc )"发货时间
+                                     ( timetype = 'WSHDRLDDAT' timestamp_utc = lv_timestamp_utc )"装入时间
+                                     ( timetype = 'WSHDRTDDAT' timestamp_utc = lv_timestamp_utc )"运输计划时间
+                                     ( timetype = 'WSHDRKODAT' timestamp_utc = lv_timestamp_utc )"领货时间
+                                   ).
+
+    CALL FUNCTION 'BAPI_OUTB_DELIVERY_CONFIRM_DEC'
+      EXPORTING
+        header_data      = ls_header_data
+        header_control   = ls_header_control
+        delivery         = iv_vbeln
+      TABLES
+        item_data        = lt_item_data
+        item_control     = lt_item_control
+        item_data_spl    = lt_item_spl
+        header_deadlines = lt_header_deadlines
+        return           = rv_return-return.
+
+    LOOP AT rv_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+      EXIT.
+    ENDLOOP.
+    IF sy-subrc <> 0.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+      "查底表，确认更新完毕
+      DO 600 TIMES.
+        SELECT SINGLE wbstk INTO @DATA(lv_wbstk) FROM likp WHERE vbeln = @iv_vbeln.
+        IF sy-subrc = 0.
+          IF lv_wbstk NE 'C'."交货单未过账成功，直接返回
+            RETURN.
+          ELSE.
+            EXIT."退出循环
+          ENDIF.
+        ELSE.
+          WAIT UP TO '1' SECONDS.
+        ENDIF.
+      ENDDO.
+
+      CHECK lv_wbstk = 'C'.
+      SELECT vbeln,mjahr FROM vbfa AS a
+        WHERE vbelv = @iv_vbeln AND vbtyp_n = 'R'
+        AND NOT EXISTS ( SELECT smbln FROM m_mbmps WHERE smbln = a~vbeln AND sjahr = a~mjahr )
+        ORDER BY erdat DESCENDING, erzet DESCENDING
+        INTO TABLE @DATA(lt_vbfa)
+        UP TO 1 ROWS.
+      CHECK sy-subrc = 0.
+      rv_return-mblnr = lt_vbfa[ 1 ]-vbeln.
+      rv_return-mjahr = lt_vbfa[ 1 ]-mjahr.
+    ELSE.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD delete_dn.
+    DATA: ls_return         TYPE bapiret2,
+          ls_header_data    TYPE bapiobdlvhdrcon,
+          ls_header_control TYPE bapiobdlvhdrctrlcon,
+*          lt_header_deadlines TYPE STANDARD TABLE OF bapidlvdeadln,
+*          lt_item_data        TYPE STANDARD TABLE OF bapiobdlvitemcon,
+*          ls_item_data        TYPE bapiobdlvitemcon,
+*          lt_item_control     TYPE STANDARD TABLE OF bapiobdlvitemctrlcon WITH HEADER LINE,
+          lt_item_control   TYPE TABLE OF bapiobdlvitemctrlchg,
+          ls_item_control   TYPE bapiobdlvitemctrlchg.
+*    DATA: lv_timestamp_utc TYPE tzntstmps.
+    CLEAR: ls_return.
+    DO 10 TIMES.
+      SELECT SINGLE vbeln,wbstk FROM likpuk INTO @DATA(ls_likp) WHERE vbeln = @iv_vbeln.
+      IF sy-subrc = 0.
+        EXIT.
+      ELSE.
+        WAIT UP TO '0.5' SECONDS.
+      ENDIF.
+    ENDDO.
+    "交货单不存在
+    IF ls_likp IS INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '002' message_v1 = iv_vbeln ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1.
+      APPEND ls_return TO rv_return.
+      RETURN.
+    ENDIF.
+    "交货已过账
+    IF ls_likp-wbstk IS NOT INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '111' ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message .
+      APPEND ls_return TO rv_return.
+      RETURN.
+    ENDIF.
+
+    SELECT vbeln,posnr FROM lips INTO TABLE @DATA(lt_lips) WHERE vbeln = @iv_vbeln.
+    LOOP AT lt_lips INTO DATA(ls_lips).
+      CLEAR: ls_item_control .
+      ls_item_control-deliv_numb = ls_lips-vbeln.
+      ls_item_control-deliv_item = ls_lips-posnr.
+      ls_item_control-del_item   = 'X'. "删除dn行项目
+      APPEND ls_item_control TO lt_item_control.
+    ENDLOOP.
+
+    ls_header_data-deliv_numb    = iv_vbeln.
+    ls_header_control-deliv_numb = iv_vbeln.
+    ls_header_control-dlv_del    = 'X'."删除整个dn
+
+    CALL FUNCTION 'BAPI_OUTB_DELIVERY_CHANGE'
+      EXPORTING
+        header_data    = ls_header_data
+        header_control = ls_header_control
+        delivery       = iv_vbeln
+      TABLES
+*       item_data      = lt_item_data
+        item_control   = lt_item_control
+*       item_data_spl  = lt_item_spl
+*       header_deadlines = lt_header_deadlines
+        return         = rv_return.
+
+    LOOP AT rv_return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+      EXIT.
+    ENDLOOP.
+    IF sy-subrc <> 0.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+    ELSE.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD delete_so.
+    DATA: ls_return TYPE bapiret2,
+          ls_headx  TYPE bapisdh1x,
+          lt_item   TYPE STANDARD TABLE OF bapisditm,
+          ls_item   TYPE bapisditm,
+          lt_itemx  TYPE STANDARD TABLE OF  bapisditmx,
+          ls_itemx  TYPE bapisditmx.
+    CLEAR: ls_return.
+
+    SELECT vbeln,posnr INTO TABLE @DATA(lt_vbap) FROM vbap WHERE vbeln = @iv_vbeln AND posnr IN @it_posnr.
+    IF sy-subrc = 0.
+      ls_headx-updateflag = 'U'.         "UPDATE
+
+      LOOP AT lt_vbap INTO DATA(ls_vbap).
+        ls_item-itm_number    = ls_vbap-posnr ."行项目
+        APPEND ls_item TO lt_item.
+        ls_itemx-itm_number   = ls_vbap-posnr ."行项目
+        ls_itemx-updateflag   =  'D'.
+        APPEND ls_itemx TO lt_itemx.
+      ENDLOOP.
+      CALL FUNCTION 'BAPI_SALESORDER_CHANGE'
+        EXPORTING
+          salesdocument    = iv_vbeln
+          order_header_inx = ls_headx
+        TABLES
+          return           = rv_return
+          order_item_in    = lt_item
+          order_item_inx   = lt_itemx.
+    ELSE.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '002' message_v1 = iv_vbeln ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1.
+      APPEND ls_return TO rv_return.
+      RETURN.
+    ENDIF.
+    LOOP AT rv_return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+      EXIT.
+    ENDLOOP.
+    IF sy-subrc <> 0.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+    ELSE.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD reverse_dn.
+    DATA: ls_return TYPE bapiret2,
+          lt_mesg   TYPE STANDARD TABLE OF mesg,
+          lt_vbfa   TYPE STANDARD TABLE OF vbfavb.
+    DATA: lv_budat TYPE budat.
+    DATA: lv_error TYPE abap_bool.
+    CLEAR: ls_return.
+    DO 10 TIMES.
+      SELECT SINGLE vbeln,wbstk,wadat_ist FROM likpuk INTO @DATA(ls_likp) WHERE vbeln = @iv_vbeln.
+      IF sy-subrc = 0.
+        EXIT.
+      ELSE.
+        WAIT UP TO '0.5' SECONDS.
+      ENDIF.
+    ENDDO.
+    "交货单不存在
+    IF ls_likp IS INITIAL.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '002' message_v1 = iv_vbeln ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1.
+      APPEND ls_return TO rv_return-return.
+      RETURN.
+    ENDIF.
+    "交货未过账
+    IF ls_likp-wbstk NA 'BC'.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '001' message_v1 = TEXT-t02 ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1 .
+      APPEND ls_return TO rv_return-return.
+      RETURN.
+    ENDIF.
+
+    IF iv_budat IS SUPPLIED AND iv_budat IS NOT INITIAL.
+      lv_budat = iv_budat.
+    ELSE.
+      lv_budat = ls_likp-wadat_ist.
+    ENDIF.
+
+    CALL FUNCTION 'WS_REVERSE_GOODS_ISSUE'
+      EXPORTING
+        i_vbeln                   = iv_vbeln
+        i_budat                   = lv_budat
+*       I_COUNT                   =
+*       I_MBLNR                   =
+        i_tcode                   = 'VL09'
+        i_vbtyp                   = 'J'
+      TABLES
+        t_mesg                    = lt_mesg
+        t_vbfa                    = lt_vbfa
+      EXCEPTIONS
+        error_reverse_goods_issue = 1
+        OTHERS                    = 2.
+
+    IF sy-subrc <> 0.
+      lv_error = abap_true.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '001' message_v1 = TEXT-t03 ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1 .
+      APPEND ls_return TO rv_return-return.
+    ENDIF.
+    rv_return-return = CORRESPONDING #( BASE ( rv_return-return  )
+                                        lt_mesg MAPPING type = msgty
+                                                        id = arbgb
+                                                        number = txtnr
+                                                        message_v1 = msgv1
+                                                        message_v2 = msgv2
+                                                        message_v3 = msgv3
+                                                        message_v4 = msgv4 ).
+    LOOP AT rv_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+      EXIT.
+    ENDLOOP.
+    IF sy-subrc <> 0.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+
+      SELECT vbeln,mjahr FROM @lt_vbfa AS a
+        WHERE vbelv = @iv_vbeln AND vbtyp_n = 'h'
+        ORDER BY erdat DESCENDING, erzet DESCENDING
+        INTO TABLE @DATA(lt_vbfa_h)
+        UP TO 1 ROWS.
+      CHECK sy-subrc = 0.
+      rv_return-mblnr = lt_vbfa_h[ 1 ]-vbeln.
+      rv_return-mjahr = lt_vbfa_h[ 1 ]-mjahr.
     ELSE.
       CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
     ENDIF.
