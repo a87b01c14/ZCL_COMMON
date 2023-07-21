@@ -32,6 +32,11 @@ CLASS zcl_common DEFINITION
     CLASS-METHODS authority_check_tcode
       IMPORTING
         !tcode TYPE tcode .
+    CLASS-METHODS get_month_lastday
+      IMPORTING
+        VALUE(iv_begda) TYPE begda
+      RETURNING
+        VALUE(ev_endda) TYPE endda .
     CLASS-METHODS get_file_name
       RETURNING
         VALUE(rv_file) TYPE rlgrap-filename .
@@ -72,6 +77,13 @@ CLASS zcl_common DEFINITION
         !iv_current TYPE i
         !iv_total   TYPE i
         !iv_msg     TYPE string OPTIONAL .
+    CLASS-METHODS start_job
+      IMPORTING
+        VALUE(jobname) TYPE tbtcjob-jobname OPTIONAL
+        VALUE(report)  TYPE repid
+        !params        TYPE rsparams_tt
+        !start_date    TYPE tbtcjob-sdlstrtdt OPTIONAL
+        !start_time    TYPE tbtcjob-sdlstrttm OPTIONAL .
     CLASS-METHODS open_job
       IMPORTING
         !jobname        TYPE tbtcjob-jobname
@@ -79,8 +91,12 @@ CLASS zcl_common DEFINITION
         VALUE(jobcount) TYPE tbtcjob-jobcount .
     CLASS-METHODS close_job
       IMPORTING
-        !jobname  TYPE tbtcjob-jobname
-        !jobcount TYPE tbtcjob-jobcount .
+        !jobname        TYPE tbtcjob-jobname
+        !jobcount       TYPE tbtcjob-jobcount
+        !start_date     TYPE tbtcjob-sdlstrtdt OPTIONAL
+        !start_time     TYPE tbtcjob-sdlstrttm OPTIONAL
+      RETURNING
+        VALUE(rv_subrc) TYPE sy-subrc .
     CLASS-METHODS am_i_in_job
       EXPORTING
         !in_job   TYPE abap_bool
@@ -189,13 +205,20 @@ CLASS zcl_common DEFINITION
         !it_posnr        TYPE tt_posnr OPTIONAL
       RETURNING
         VALUE(rv_return) TYPE bapiret2_t .
+    CLASS-METHODS close_so
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbak-vbeln
+        !it_posnr        TYPE tt_posnr OPTIONAL
+        VALUE(iv_abgru)  TYPE vbap-abgru
+      RETURNING
+        VALUE(rv_return) TYPE bapiret2_t .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS zcl_common IMPLEMENTATION.
+CLASS ZCL_COMMON IMPLEMENTATION.
 
 
   METHOD am_i_in_job.
@@ -228,21 +251,41 @@ CLASS zcl_common IMPLEMENTATION.
 
 
   METHOD close_job.
-    CALL FUNCTION 'JOB_CLOSE'
-      EXPORTING
-        jobname              = jobname
-        jobcount             = jobcount
-        strtimmed            = abap_true
-      EXCEPTIONS
-        cant_start_immediate = 1
-        invalid_startdate    = 2
-        jobname_missing      = 3
-        job_close_failed     = 4
-        job_nosteps          = 5
-        job_notex            = 6
-        lock_failed          = 7
-        invalid_target       = 8
-        OTHERS               = 9 ##FM_SUBRC_OK.
+    IF start_date IS NOT INITIAL.
+      CALL FUNCTION 'JOB_CLOSE'
+        EXPORTING
+          jobname              = jobname
+          jobcount             = jobcount
+          sdlstrtdt            = start_date
+          sdlstrttm            = start_time
+        EXCEPTIONS
+          cant_start_immediate = 1
+          invalid_startdate    = 2
+          jobname_missing      = 3
+          job_close_failed     = 4
+          job_nosteps          = 5
+          job_notex            = 6
+          lock_failed          = 7
+          invalid_target       = 8
+          OTHERS               = 9 ##FM_SUBRC_OK.
+    ELSE.
+      CALL FUNCTION 'JOB_CLOSE'
+        EXPORTING
+          jobname              = jobname
+          jobcount             = jobcount
+          strtimmed            = abap_true
+        EXCEPTIONS
+          cant_start_immediate = 1
+          invalid_startdate    = 2
+          jobname_missing      = 3
+          job_close_failed     = 4
+          job_nosteps          = 5
+          job_notex            = 6
+          lock_failed          = 7
+          invalid_target       = 8
+          OTHERS               = 9 ##FM_SUBRC_OK.
+    ENDIF.
+    rv_subrc = sy-subrc.
   ENDMETHOD.
 
 
@@ -1553,7 +1596,7 @@ CLASS zcl_common IMPLEMENTATION.
       RETURN.
     ENDIF.
     "已完全开票项
-    IF ls_likp-fkivk = 'C' OR ( ls_likp-fkstk = 'C' AND ls_likp-fkivk IS INITIAL ).
+    IF ( ls_likp-fkivk = 'C' AND ls_likp-fkstk IS INITIAL ) OR ( ls_likp-fkstk = 'C' AND ls_likp-fkivk IS INITIAL ).
       CLEAR ls_return.
       ls_return = VALUE #( type = 'E' id = 'VF' number = '017' ).
       MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message .
@@ -1696,12 +1739,13 @@ CLASS zcl_common IMPLEMENTATION.
 
 
   METHOD create_sto_dn.
-    DATA: lv_due_date   TYPE bapidlvcreateheader-due_date,
-          ls_dn_items   TYPE bapidlvreftosto,
-          lt_dn_items   TYPE TABLE OF bapidlvreftosto,
-          ls_return     TYPE bapiret2,
-          lv_dn_number  TYPE bapishpdelivnumb-deliv_numb,
-          lv_ship_point TYPE bapidlvcreateheader-ship_point.
+    DATA: lv_due_date      TYPE bapidlvcreateheader-due_date,
+          ls_dn_items      TYPE bapidlvreftosto,
+          lt_dn_items      TYPE TABLE OF bapidlvreftosto,
+          lt_created_items TYPE TABLE OF bapidlvitemcreated,
+          ls_return        TYPE bapiret2,
+          lv_dn_number     TYPE bapishpdelivnumb-deliv_numb,
+          lv_ship_point    TYPE bapidlvcreateheader-ship_point.
 
     CLEAR: ls_return,ls_dn_items,lt_dn_items[].
     DO 10 TIMES.
@@ -1750,9 +1794,19 @@ CLASS zcl_common IMPLEMENTATION.
         delivery          = rv_return-vbeln
       TABLES
         stock_trans_items = lt_dn_items
-*       created_items     = lt_created_items[]
+        created_items     = lt_created_items
         return            = rv_return-return.
-
+    "检查创建的行项目数
+    IF rv_return-vbeln IS NOT INITIAL.
+      IF lines( lt_created_items ) <> lines( lt_dn_items ).
+        CLEAR ls_return.
+        ls_return = VALUE #( type = 'E' id = '00' number = '001' message = TEXT-t04  ).
+        MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message .
+        APPEND ls_return TO rv_return-return.
+        CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+        RETURN.
+      ENDIF.
+    ENDIF.
     LOOP AT rv_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
       EXIT.
     ENDLOOP.
@@ -2118,6 +2172,90 @@ CLASS zcl_common IMPLEMENTATION.
       rv_return-mjahr = lt_vbfa_h[ 1 ]-mjahr.
     ELSE.
       CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD close_so.
+    DATA: ls_return TYPE bapiret2,
+          ls_headx  TYPE bapisdh1x,
+          lt_item   TYPE STANDARD TABLE OF bapisditm,
+          ls_item   TYPE bapisditm,
+          lt_itemx  TYPE STANDARD TABLE OF  bapisditmx,
+          ls_itemx  TYPE bapisditmx.
+    CLEAR: ls_return.
+
+    SELECT vbeln,posnr INTO TABLE @DATA(lt_vbap) FROM vbap WHERE vbeln = @iv_vbeln AND posnr IN @it_posnr.
+    IF sy-subrc = 0.
+      ls_headx-updateflag = 'U'.         "UPDATE
+
+      LOOP AT lt_vbap INTO DATA(ls_vbap).
+        ls_item-itm_number    = ls_vbap-posnr ."行项目
+        ls_item-reason_rej    = iv_abgru.
+        APPEND ls_item TO lt_item.
+        ls_itemx-itm_number   = ls_vbap-posnr ."行项目
+        ls_itemx-reason_rej   = abap_true.
+        ls_itemx-updateflag   =  'U'.
+        APPEND ls_itemx TO lt_itemx.
+      ENDLOOP.
+      CALL FUNCTION 'BAPI_SALESORDER_CHANGE'
+        EXPORTING
+          salesdocument    = iv_vbeln
+          order_header_inx = ls_headx
+        TABLES
+          return           = rv_return
+          order_item_in    = lt_item
+          order_item_inx   = lt_itemx.
+    ELSE.
+      CLEAR ls_return.
+      ls_return = VALUE #( type = 'E' id = 'VL' number = '002' message_v1 = iv_vbeln ).
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number INTO ls_return-message WITH ls_return-message_v1.
+      APPEND ls_return TO rv_return.
+      RETURN.
+    ENDIF.
+    LOOP AT rv_return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+      EXIT.
+    ENDLOOP.
+    IF sy-subrc <> 0.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+    ELSE.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_month_lastday.
+    CALL FUNCTION 'BKK_GET_MONTH_LASTDAY'
+      EXPORTING
+        i_date = iv_begda
+      IMPORTING
+        e_date = ev_endda.
+  ENDMETHOD.
+
+
+  METHOD start_job.
+    DATA: jobcount TYPE tbtcjob-jobcount.
+    IF jobname IS INITIAL.
+      jobname = |{ report }_{ sy-datum }{ sy-uzeit }{ sy-uname }|.
+    ENDIF.
+    jobcount = open_job( jobname ).
+    CHECK jobcount IS NOT INITIAL.
+    SUBMIT (report) WITH SELECTION-TABLE params AND RETURN VIA JOB jobname NUMBER jobcount.
+    IF sy-subrc = 0.
+      DATA(rv_subrc) = close_job( jobname = jobname jobcount = jobcount start_date = start_date start_time = start_time ).
+      IF rv_subrc EQ 0.
+        MESSAGE s715(db) WITH jobname.
+        LEAVE TO SCREEN 0.
+      ENDIF.
+    ELSE.
+      DATA(msg) = cl_abap_submit_handling=>get_error_message( ).
+      MESSAGE ID msg-msgid
+              TYPE 'I'
+              NUMBER msg-msgno
+              WITH msg-msgv1 msg-msgv2 msg-msgv3 msg-msgv4
+              DISPLAY LIKE msg-msgty.
     ENDIF.
   ENDMETHOD.
 ENDCLASS.
