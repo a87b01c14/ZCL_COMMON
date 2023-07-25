@@ -1,30 +1,39 @@
-CLASS zcl_excel_template_data DEFINITION
-  PUBLIC
-  FINAL
-  CREATE PUBLIC .
+class ZCL_EXCEL_TEMPLATE_DATA definition
+  public
+  final
+  create public .
 
-  PUBLIC SECTION.
+public section.
 
-    TYPES: tt_sheet_titles TYPE STANDARD TABLE OF zexcel_sheet_title WITH DEFAULT KEY,
-           BEGIN OF ts_template_data_sheet,
+  types:
+    tt_sheet_titles TYPE STANDARD TABLE OF zexcel_sheet_title WITH DEFAULT KEY .
+  types:
+    BEGIN OF ts_template_data_sheet,
              sheet TYPE zexcel_sheet_title,
              data  TYPE REF TO data,
-           END OF ts_template_data_sheet,
-           tt_template_data_sheets TYPE STANDARD TABLE OF ts_template_data_sheet WITH DEFAULT KEY.
+           END OF ts_template_data_sheet .
+  types:
+    tt_template_data_sheets TYPE STANDARD TABLE OF ts_template_data_sheet WITH DEFAULT KEY .
 
-    DATA mt_data TYPE tt_template_data_sheets READ-ONLY.
+  data MT_DATA type TT_TEMPLATE_DATA_SHEETS read-only .
 
-    METHODS add
-      IMPORTING
-        iv_sheet TYPE zexcel_sheet_title
-        iv_data  TYPE data .
+  methods ADD
+    importing
+      !IV_SHEET type ZEXCEL_SHEET_TITLE
+      !IV_DATA type DATA .
+  methods ADD_DATA
+    importing
+      !IS_DATA type ZCL_EXCEL_TEMPLATE_DATA=>TS_TEMPLATE_DATA_SHEET .
+  methods CONSTRUCTOR
+    importing
+      !IT_DATA type ZCL_EXCEL_TEMPLATE_DATA=>TT_TEMPLATE_DATA_SHEETS optional .
   PROTECTED SECTION.
-  PRIVATE SECTION.
+private section.
 ENDCLASS.
 
 
 
-CLASS zcl_excel_template_data IMPLEMENTATION.
+CLASS ZCL_EXCEL_TEMPLATE_DATA IMPLEMENTATION.
 
 
   METHOD add.
@@ -38,5 +47,15 @@ CLASS zcl_excel_template_data IMPLEMENTATION.
     ASSIGN <ls_data_sheet>-data->* TO <any>.
     <any> = iv_data.
 
+  ENDMETHOD.
+
+
+  METHOD add_data.
+    APPEND is_data TO mt_data.
+  ENDMETHOD.
+
+
+  METHOD constructor.
+    mt_data = it_data.
   ENDMETHOD.
 ENDCLASS.

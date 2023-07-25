@@ -62,6 +62,13 @@ public section.
       !IT_TABLE type STANDARD TABLE
     raising
       ZCX_EXCEL .
+  class-methods PRINT_EXCEL
+    importing
+      !IV_W3OBJID type W3OBJID
+      !IT_DATA type ZCL_EXCEL_TEMPLATE_DATA=>TT_TEMPLATE_DATA_SHEETS
+      !IV_XLSM type ABAP_BOOL default ABAP_FALSE
+      !IV_AUTOPRINT type ABAP_BOOL default ABAP_FALSE
+      !IV_FILENAME type STRING optional .
   class-methods GET_OJB_NUMBER
     importing
       !IV_OBJ type ZEOBJECT
@@ -2340,5 +2347,34 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         report_not_existent = 3
         report_not_supplied = 4.
     rv_subrc = COND #( WHEN sy-subrc <> 0 THEN sy-subrc ELSE rv_subrc ).
+  ENDMETHOD.
+
+
+  METHOD print_excel.
+    DATA: lo_data      TYPE REF TO zcl_excel_template_data,
+          lo_excel     TYPE REF TO zcl_excel,
+          lo_reader    TYPE REF TO zif_excel_reader,
+          lo_worksheet TYPE REF TO zcl_excel_worksheet,
+          lo_error     TYPE REF TO zcx_excel.
+
+    TRY.
+        lo_data = NEW #( it_data = it_data ).
+*  CREATE reader
+        CREATE OBJECT lo_reader TYPE zcl_excel_reader_xlsm.
+
+*  LOAD template
+        lo_excel = lo_reader->load_smw0( iv_w3objid ).
+        lo_worksheet = lo_excel->get_active_worksheet( ).
+
+        lo_excel->fill_template( lo_data ).
+        CALL FUNCTION 'ZFUN_DISPLAY_EXCEL'
+          EXPORTING
+            iv_xlsm      = iv_xlsm    " 是否为XLSM格式
+            iv_autoprint = iv_autoprint    " 是否自动打印
+            iv_filename  = iv_filename
+            io_excel     = lo_excel.
+      CATCH zcx_excel INTO lo_error.
+        MESSAGE lo_error->get_text( ) TYPE 'S' DISPLAY LIKE 'E'.
+    ENDTRY.
   ENDMETHOD.
 ENDCLASS.

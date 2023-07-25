@@ -86,7 +86,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_excel_fill_template IMPLEMENTATION.
+CLASS ZCL_EXCEL_FILL_TEMPLATE IMPLEMENTATION.
 
 
   METHOD create.
@@ -144,6 +144,7 @@ CLASS zcl_excel_fill_template IMPLEMENTATION.
           lt_merged_cells_result       TYPE zcl_excel_worksheet=>mty_ts_merge,
           lt_tmp_merged_cells          TYPE zcl_excel_worksheet=>mty_ts_merge,
           ls_merged_cell               LIKE LINE OF lt_tmp_merged_cells,
+          lo_rows                      TYPE REF TO zcl_excel_rows,
           lv_start_row                 TYPE i,
           lv_stop_row                  TYPE i,
           lv_cell_row                  TYPE i,
@@ -225,6 +226,11 @@ CLASS zcl_excel_fill_template IMPLEMENTATION.
       CHECK sy-subrc = 0.
 
       cv_diff = cv_diff - <ls_range>-length.
+*copy rows
+      IF lines( <table> ) > 1.
+        lo_rows = io_sheet->get_rows( ).
+        lo_rows->copy_rows( ip_index = <ls_range>-start ip_lines = lines( <table> ) - 1 ).
+      ENDIF.
 
 *merge each line of data table with template
       LOOP AT <table> ASSIGNING <line>.
