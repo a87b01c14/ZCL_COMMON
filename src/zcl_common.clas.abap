@@ -2266,6 +2266,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     jobcount = open_job( jobname ).
     IF jobcount IS INITIAL.
       rs_return = VALUE #( type = 'E' message =  |后台任务{ jobname }创建失败| ).
+      MESSAGE rs_return-message TYPE 'S' DISPLAY LIKE 'E'.
       RETURN.
     ENDIF.
     IF variant IS INITIAL."未提供变式
@@ -2275,13 +2276,11 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       rv_subrc = is_variant_exists( report = report variant = variant ).
       IF rv_subrc <> 0.
         rs_return = VALUE #( type = 'E' message =  |报表{ report }的变式{ variant }不存在| ).
+        MESSAGE rs_return-message TYPE 'S' DISPLAY LIKE 'E'.
         RETURN.
       ENDIF.
-      rv_subrc = submit_job( jobuser  = jobuser
-                             jobcount = jobcount
-                             jobname  = jobname
-                             report   = report
-                             variant  = variant ).
+      SUBMIT (report) USING SELECTION-SET variant WITH SELECTION-TABLE params AND RETURN USER jobuser VIA JOB jobname NUMBER jobcount.
+      rv_subrc = sy-subrc.
     ENDIF.
     IF rv_subrc = 0.
       rv_subrc = close_job( jobname = jobname jobcount = jobcount start_date = start_date start_time = start_time ).
@@ -2297,7 +2296,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
                            message_v3 = msg-msgv3
                            message_v4 = msg-msgv4 ).
       MESSAGE ID msg-msgid
-              TYPE 'I'
+              TYPE 'S'
               NUMBER msg-msgno
               WITH msg-msgv1 msg-msgv2 msg-msgv3 msg-msgv4
               DISPLAY LIKE msg-msgty.
