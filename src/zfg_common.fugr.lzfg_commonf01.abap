@@ -190,8 +190,6 @@ FORM save_as_data .
     l_filename       TYPE string,
     i_filename(100)  TYPE c.
 
-
-*  default_filename =  <gs_item>-qcno && '_' && <gs_item>-qcnr && '.XLSX'.
   IF g_filename IS NOT INITIAL.
     default_filename =  g_filename && '.XLSX'.
   ELSE.

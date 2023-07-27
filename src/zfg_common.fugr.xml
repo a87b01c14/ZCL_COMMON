@@ -365,12 +365,58 @@
       <ICON_ID>@0W@</ICON_ID>
       <FUN_TEXT>取消</FUN_TEXT>
      </RSMPE_FUNT>
+     <RSMPE_FUNT>
+      <CODE>PRINT</CODE>
+      <TEXTNO>001</TEXTNO>
+      <TEXT_TYPE>S</TEXT_TYPE>
+      <TEXT_NAME>ICON_PRINT</TEXT_NAME>
+      <ICON_ID>@0X@</ICON_ID>
+      <FUN_TEXT>打印</FUN_TEXT>
+      <ICON_TEXT>打印</ICON_TEXT>
+      <INFO_TEXT>打印</INFO_TEXT>
+     </RSMPE_FUNT>
+     <RSMPE_FUNT>
+      <CODE>SAVE_AS</CODE>
+      <TEXTNO>001</TEXTNO>
+      <TEXT_TYPE>S</TEXT_TYPE>
+      <TEXT_NAME>ICON_OPEN</TEXT_NAME>
+      <ICON_ID>@JJ@</ICON_ID>
+      <FUN_TEXT>另存为</FUN_TEXT>
+      <ICON_TEXT>另存为</ICON_TEXT>
+      <INFO_TEXT>另存为</INFO_TEXT>
+     </RSMPE_FUNT>
     </FUN>
+    <BUT>
+     <RSMPE_BUT>
+      <PFK_CODE>000001</PFK_CODE>
+      <CODE>0001</CODE>
+      <NO>01</NO>
+      <PFNO>08</PFNO>
+     </RSMPE_BUT>
+     <RSMPE_BUT>
+      <PFK_CODE>000001</PFK_CODE>
+      <CODE>0001</CODE>
+      <NO>02</NO>
+      <PFNO>09</PFNO>
+     </RSMPE_BUT>
+    </BUT>
     <PFK>
      <RSMPE_PFK>
       <CODE>000001</CODE>
       <PFNO>03</PFNO>
       <FUNCODE>BACK</FUNCODE>
+      <FUNNO>001</FUNNO>
+     </RSMPE_PFK>
+     <RSMPE_PFK>
+      <CODE>000001</CODE>
+      <PFNO>08</PFNO>
+      <FUNCODE>PRINT</FUNCODE>
+      <FUNNO>001</FUNNO>
+     </RSMPE_PFK>
+     <RSMPE_PFK>
+      <CODE>000001</CODE>
+      <PFNO>09</PFNO>
+      <FUNCODE>SAVE_AS</FUNCODE>
       <FUNNO>001</FUNNO>
      </RSMPE_PFK>
      <RSMPE_PFK>
@@ -398,6 +444,14 @@
      <RSMPE_STAF>
       <STATUS>0300</STATUS>
       <FUNCTION>EXIT</FUNCTION>
+     </RSMPE_STAF>
+     <RSMPE_STAF>
+      <STATUS>0300</STATUS>
+      <FUNCTION>PRINT</FUNCTION>
+     </RSMPE_STAF>
+     <RSMPE_STAF>
+      <STATUS>0300</STATUS>
+      <FUNCTION>SAVE_AS</FUNCTION>
      </RSMPE_STAF>
     </SET>
     <DOC>
