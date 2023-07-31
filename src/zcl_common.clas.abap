@@ -1980,13 +1980,9 @@ CLASS ZCL_COMMON IMPLEMENTATION.
           wait = 'X'.
       "查底表，确认更新完毕
       DO 600 TIMES.
-        SELECT SINGLE wbstk INTO @DATA(lv_wbstk) FROM likp WHERE vbeln = @iv_vbeln.
+        SELECT SINGLE wbstk INTO @DATA(lv_wbstk) FROM likp WHERE vbeln = @iv_vbeln AND wbstk = 'C'.
         IF sy-subrc = 0.
-          IF lv_wbstk NE 'C'."交货单未过账成功，直接返回
-            RETURN.
-          ELSE.
-            EXIT."退出循环
-          ENDIF.
+          EXIT."退出循环
         ELSE.
           WAIT UP TO '1' SECONDS.
         ENDIF.
