@@ -1,12 +1,12 @@
-class ZCL_COMMON definition
-  public
-  final
-  create public .
+CLASS zcl_common DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  types:
-    BEGIN OF ty_billing_return,
+    TYPES:
+      BEGIN OF ty_billing_return,
         fkstk     TYPE likp-fkstk,
         fkivk     TYPE likp-fkivk,
         fkstk_ret TYPE likp-fkstk, "BAPI后交货开票状态
@@ -15,252 +15,354 @@ public section.
         errors    TYPE /syclo/sd_bapivbrkerrors_tab,
         success   TYPE bapivbrksuccess_t,
       END OF ty_billing_return .
-  types:
-    BEGIN OF ty_dn_return,
+    TYPES:
+      BEGIN OF ty_dn_return,
         vbeln  TYPE vbeln_vl,
         return TYPE bapiret2_t,
       END OF ty_dn_return .
-  types:
-    BEGIN OF ty_dn_post_return,
+    TYPES:
+      BEGIN OF ty_dn_post_return,
         mblnr  TYPE mblnr,
         mjahr  TYPE mjahr,
         return TYPE bapiret2_t,
       END OF ty_dn_post_return .
-  types:
-    tt_posnr TYPE STANDARD TABLE OF /cwm/r_posnr .
-  types:
-    BEGIN OF ty_job_return,
+    TYPES:
+      tt_posnr TYPE STANDARD TABLE OF /cwm/r_posnr .
+    TYPES:
+      BEGIN OF ty_job_return,
         jobname  TYPE tbtcjob-jobname,
         jobcount TYPE tbtcjob-jobcount,
         return   TYPE bapiret2,
       END OF ty_job_return .
+    TYPES:
+      BEGIN OF ty_pic_tab,
+        line(255) TYPE x,
+      END OF ty_pic_tab .
+    TYPES:
+      tt_pic_tab TYPE STANDARD TABLE OF ty_pic_tab WITH EMPTY KEY .
+    TYPES:
+      BEGIN OF ty_upload_file_return,
+        subrc      LIKE sy-subrc,
+        filelength TYPE i,
+        data_tab   TYPE tt_pic_tab,
+      END OF ty_upload_file_return .
+    TYPES:
+      BEGIN OF ty_upload_server_return,
+        filename TYPE rlgrap-filename, "文件名+扩展名
+        return   TYPE bapiret2,
+      END OF ty_upload_server_return .
+    TYPES:
+      BEGIN OF ty_read_file_return,
+        data_tab TYPE tt_pic_tab,
+        return   TYPE bapiret2,
+      END OF ty_read_file_return .
+    TYPES:
+      BEGIN OF ty_split_file,
+        pure_filename  TYPE rlgrap-filename, "纯文件名
+        pure_extension TYPE char4, "扩展名
+        filename       TYPE rlgrap-filename, "文件名+扩展名
+        pathname       TYPE rlgrap-filename, "路径
+      END OF ty_split_file .
 
-  class-methods AUTHORITY_CHECK_TCODE
-    importing
-      !TCODE type TCODE .
-  class-methods GET_MONTH_LASTDAY
-    importing
-      value(IV_BEGDA) type BEGDA
-    returning
-      value(EV_ENDDA) type ENDDA .
-  class-methods GET_FILE_NAME
-    returning
-      value(RV_FILE) type RLGRAP-FILENAME .
-  class-methods DOWNLOAD_TEMPLATE
-    importing
-      !IV_OBJID type W3OBJID
-      !IV_FILENAME type RLGRAP-FILENAME .
-  class-methods UPLOAD_EXCEL
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-      !IV_SKIPPED_ROWS type I
-      !IV_SKIPPED_COLS type I
-      !IV_MAX_COL type I
-      !IV_MAX_ROW type I
-    exporting
-      !ET_TABLE type STANDARD TABLE
-    exceptions
-      ERROR
-      CONVER_ERROR .
-  class-methods EXPORT_EXCEL
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-      !IT_TABLE type STANDARD TABLE
-    raising
-      ZCX_EXCEL .
-  class-methods PRINT_EXCEL
-    importing
-      !IV_W3OBJID type W3OBJID
-      !IT_DATA type ZCL_EXCEL_TEMPLATE_DATA=>TT_TEMPLATE_DATA_SHEETS
-      !IV_XLSM type ABAP_BOOL default ABAP_FALSE
-      !IV_AUTOPRINT type ABAP_BOOL default ABAP_FALSE
-      !IV_FILENAME type STRING optional .
-  class-methods GET_OJB_NUMBER
-    importing
-      !IV_OBJ type ZEOBJECT
-      !IV_OBJKEY type ZEKEY
-      !IV_MAX type ZESEQ_MAX
-      !IV_COUNT type ZECOUNT
-      !IV_OBJ_D type ZEOBJECT_D
-      !IV_REPEAT type ZEREPEAT optional
-    returning
-      value(RV_SEQ) type ZESEQ .
-  class-methods SHOW_PROGRESSBAR
-    importing
-      !IV_CURRENT type I
-      !IV_TOTAL type I
-      !IV_MSG type STRING optional .
-  class-methods START_JOB
-    importing
-      value(JOBNAME) type TBTCJOB-JOBNAME optional
-      value(JOBUSER) type SY-UNAME optional
-      value(REPORT) type REPID
-      !VARIANT type RSVAR-VARIANT optional
-      !PARAMS type RSPARAMS_TT
-      !START_DATE type TBTCJOB-SDLSTRTDT optional
-      !START_TIME type TBTCJOB-SDLSTRTTM optional
-      !EVENTID type TBTCJOB-EVENTID optional
-      !EVENTPARM type TBTCJOB-EVENTPARM optional
-    returning
-      value(RS_RETURN) type ZCL_COMMON=>TY_JOB_RETURN .
-  class-methods SUBMIT_JOB
-    importing
-      !JOBNAME type TBTCJOB-JOBNAME
-      !JOBCOUNT type TBTCJOB-JOBCOUNT
-      !JOBUSER type SY-UNAME
-      !REPORT type REPID
-      !VARIANT type RSVAR-VARIANT
-    returning
-      value(RV_SUBRC) type SY-SUBRC .
-  class-methods OPEN_JOB
-    importing
-      !JOBNAME type TBTCJOB-JOBNAME
-    returning
-      value(JOBCOUNT) type TBTCJOB-JOBCOUNT .
-  class-methods CLOSE_JOB
-    importing
-      !JOBNAME type TBTCJOB-JOBNAME
-      !JOBCOUNT type TBTCJOB-JOBCOUNT
-      !START_DATE type TBTCJOB-SDLSTRTDT optional
-      !START_TIME type TBTCJOB-SDLSTRTTM optional
-      !EVENTID type TBTCJOB-EVENTID optional
-      !EVENTPARM type TBTCJOB-EVENTPARM optional
-    returning
-      value(RV_SUBRC) type SY-SUBRC .
-  class-methods AM_I_IN_JOB
-    exporting
-      !IN_JOB type ABAP_BOOL
-      !JOBCOUNT type BTCJOBCNT
-      !JOBNAME type BTCJOB .
-  class-methods IS_VARIANT_EXISTS
-    importing
-      !REPORT type SY-REPID
-      !VARIANT type RSVAR-VARIANT
-    returning
-      value(RV_SUBRC) type SY-SUBRC .
-  class-methods GET_DEFAULT_VARIANT .
-  class-methods GET_USER_PARAM
-    importing
-      !IV_PARID type USPARAM-PARID
-    returning
-      value(RV_PARVA) type USPARAM-PARVA .
-  class-methods RV_CALL_DISPLAY_TRANSACTION
-    importing
-      value(BUKRS) type BUKRS default '    '
-      value(GJAHR) type GJAHR default '0000'
-      value(LGNUM) type VBFA-LGNUM default '   '
-      value(POSNR) type VBAP-POSNR default '000000'
-      value(VBELN) type VBUK-VBELN
-      value(AUFNR) type VBAK-AUFNR optional
-      value(VBTYP) type VBUK-VBTYP default ' '
-      value(FI_APPLI) type VBFAL-APPLI default '  ' .
-  class-methods DISPLAY_SD_DOC
-    importing
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_SO
-    importing
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_DN
-    importing
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_IV
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_MIGO
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_PR
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_PO
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_FI
-    importing
-      value(BUKRS) type BUKRS default '    '
-      value(GJAHR) type GJAHR default '0000'
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_BP
-    importing
-      !IV_PARTNER type BUT000-PARTNER .
-  class-methods DISPLAY_CO
-    importing
-      !AUFNR type AUFNR .
-  class-methods DISPLAY_IDOC
-    importing
-      !IV_DOCNUM type EDIDC-DOCNUM .
-  class-methods ADD_ROLE
-    importing
-      !IV_USERNAME type BAPIBNAME-BAPIBNAME
-      !IT_ROLES type SUID_TT_BAPIAGR
-    returning
-      value(RETURN) type TT_BAPIRET2 .
-  class-methods SWC_CALL_METHOD
-    importing
-      value(OBJTYPE) type SWOTOBJID-OBJTYPE optional
-      value(OBJKEY) type SWOTOBJID-OBJKEY optional
-      value(OBJECT) type SWOTRTIME-OBJECT optional
-      value(METHOD) type SWO_METHOD default 'DISPLAY'
-    returning
-      value(RETURN) type SWOTRETURN .
-  class-methods CREATE_BILLING_BY_SO
-    importing
-      value(IV_VBELN) type VBELN
-    returning
-      value(RV_RETURN) type TY_BILLING_RETURN .
-  class-methods CREATE_BILLING_BY_DN
-    importing
-      value(IV_VBELN) type VBELN
-    returning
-      value(RV_RETURN) type TY_BILLING_RETURN .
-  class-methods CREATE_SO_DN
-    importing
-      value(IV_VBELN) type VBELN
-    returning
-      value(RV_RETURN) type TY_DN_RETURN .
-  class-methods CREATE_STO_DN
-    importing
-      value(IV_VBELN) type VBELN
-    returning
-      value(RV_RETURN) type TY_DN_RETURN .
-  class-methods POST_DN
-    importing
-      value(IV_VBELN) type LIKP-VBELN
-      !IV_BUDAT type BUDAT optional
-      !IV_RESLO type RESLO optional
-    returning
-      value(RV_RETURN) type TY_DN_POST_RETURN .
-  class-methods REVERSE_DN
-    importing
-      value(IV_VBELN) type LIKP-VBELN
-      !IV_BUDAT type BUDAT optional
-    returning
-      value(RV_RETURN) type TY_DN_POST_RETURN .
-  class-methods DELETE_DN
-    importing
-      value(IV_VBELN) type LIKP-VBELN
-    returning
-      value(RV_RETURN) type BAPIRET2_T .
-  class-methods DELETE_SO
-    importing
-      value(IV_VBELN) type VBAK-VBELN
-      !IT_POSNR type TT_POSNR optional
-    returning
-      value(RV_RETURN) type BAPIRET2_T .
-  class-methods CLOSE_SO
-    importing
-      value(IV_VBELN) type VBAK-VBELN
-      !IT_POSNR type TT_POSNR optional
-      value(IV_ABGRU) type VBAP-ABGRU
-    returning
-      value(RV_RETURN) type BAPIRET2_T .
+    CLASS-METHODS authority_check_tcode
+      IMPORTING
+        !tcode TYPE tcode .
+    CLASS-METHODS get_month_lastday
+      IMPORTING
+        VALUE(iv_begda) TYPE begda
+      RETURNING
+        VALUE(ev_endda) TYPE endda .
+    CLASS-METHODS save_file_dialog
+      IMPORTING
+        !iv_filename       TYPE rlgrap-filename OPTIONAL
+      RETURNING
+        VALUE(rv_filename) TYPE rlgrap-filename .
+    CLASS-METHODS get_file_name
+      IMPORTING
+        VALUE(iv_filter) TYPE string DEFAULT cl_gui_frontend_services=>filetype_excel
+      RETURNING
+        VALUE(rv_file)   TYPE rlgrap-filename .
+    CLASS-METHODS download_template
+      IMPORTING
+        !iv_objid    TYPE w3objid
+        !iv_filename TYPE rlgrap-filename .
+    CLASS-METHODS upload_excel
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+        !iv_skipped_rows TYPE i
+        !iv_skipped_cols TYPE i
+        !iv_max_col      TYPE i
+        !iv_max_row      TYPE i
+      EXPORTING
+        !et_table        TYPE STANDARD TABLE
+      EXCEPTIONS
+        error
+        conver_error .
+    CLASS-METHODS export_excel
+      IMPORTING
+        !iv_filename TYPE rlgrap-filename
+        !it_table    TYPE STANDARD TABLE
+      RAISING
+        zcx_excel .
+    CLASS-METHODS print_excel
+      IMPORTING
+        !iv_w3objid   TYPE w3objid
+        !it_data      TYPE zcl_excel_template_data=>tt_template_data_sheets
+        !iv_xlsm      TYPE abap_bool DEFAULT abap_false
+        !iv_autoprint TYPE abap_bool DEFAULT abap_false
+        !iv_filename  TYPE string OPTIONAL .
+    CLASS-METHODS download_file
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+        VALUE(data_tab)  TYPE zcl_common=>tt_pic_tab
+      RETURNING
+        VALUE(rs_return) TYPE bapiret2 .
+    CLASS-METHODS read_file
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+      RETURNING
+        VALUE(rs_return) TYPE zcl_common=>ty_read_file_return .
+    CLASS-METHODS upload_file
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+      RETURNING
+        VALUE(rs_return) TYPE zcl_common=>ty_upload_file_return .
+    CLASS-METHODS remove_file_from_server
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+      RETURNING
+        VALUE(rs_return) TYPE bapiret2 .
+    CLASS-METHODS download_file_from_server
+      IMPORTING
+        !iv_filename_server TYPE rlgrap-filename
+        !iv_filename_client TYPE rlgrap-filename
+      RETURNING
+        VALUE(rs_return)    TYPE bapiret2 .
+    CLASS-METHODS upload_file_to_server
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+        !iv_path         TYPE rlgrap-filename DEFAULT '/usr/sap/trans'
+      RETURNING
+        VALUE(rs_return) TYPE zcl_common=>ty_upload_server_return .
+    CLASS-METHODS split_file
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+      RETURNING
+        VALUE(rs_return) TYPE zcl_common=>ty_split_file .
+    CLASS-METHODS create_url
+      IMPORTING
+        !iv_subtype   TYPE char4
+        !data_tab     TYPE zcl_common=>tt_pic_tab
+      RETURNING
+        VALUE(rv_url) TYPE epssurl .
+    CLASS-METHODS resize_image
+      IMPORTING
+        !iv_original    TYPE xstring
+        !iv_max_width   TYPE i DEFAULT 1024
+        !iv_max_height  TYPE i DEFAULT 1024
+      RETURNING
+        VALUE(rv_small) TYPE xstring .
+    CLASS-METHODS xstring_to_binary
+      IMPORTING
+        !iv_xstring     TYPE xstring
+      RETURNING
+        VALUE(data_tab) TYPE zcl_common=>tt_pic_tab .
+    CLASS-METHODS binary_to_xstring
+      IMPORTING
+        !iv_filelength    TYPE i
+        !data_tab         TYPE zcl_common=>tt_pic_tab
+      RETURNING
+        VALUE(rv_xstring) TYPE xstring .
+    CLASS-METHODS show_picture
+      IMPORTING
+        !iv_filename TYPE rlgrap-filename
+        !io_picture  TYPE REF TO cl_gui_picture OPTIONAL .
+    CLASS-METHODS get_ojb_number
+      IMPORTING
+        !iv_obj       TYPE zeobject
+        !iv_objkey    TYPE zekey
+        !iv_max       TYPE zeseq_max
+        !iv_count     TYPE zecount
+        !iv_obj_d     TYPE zeobject_d
+        !iv_repeat    TYPE zerepeat OPTIONAL
+      RETURNING
+        VALUE(rv_seq) TYPE zeseq .
+    CLASS-METHODS show_progressbar
+      IMPORTING
+        !iv_current TYPE i
+        !iv_total   TYPE i
+        !iv_msg     TYPE string OPTIONAL .
+    CLASS-METHODS start_job
+      IMPORTING
+        VALUE(jobname)   TYPE tbtcjob-jobname OPTIONAL
+        VALUE(jobuser)   TYPE sy-uname OPTIONAL
+        VALUE(report)    TYPE repid
+        !variant         TYPE rsvar-variant OPTIONAL
+        !params          TYPE rsparams_tt
+        !start_date      TYPE tbtcjob-sdlstrtdt OPTIONAL
+        !start_time      TYPE tbtcjob-sdlstrttm OPTIONAL
+        !eventid         TYPE tbtcjob-eventid OPTIONAL
+        !eventparm       TYPE tbtcjob-eventparm OPTIONAL
+      RETURNING
+        VALUE(rs_return) TYPE zcl_common=>ty_job_return .
+    CLASS-METHODS submit_job
+      IMPORTING
+        !jobname        TYPE tbtcjob-jobname
+        !jobcount       TYPE tbtcjob-jobcount
+        !jobuser        TYPE sy-uname
+        !report         TYPE repid
+        !variant        TYPE rsvar-variant
+      RETURNING
+        VALUE(rv_subrc) TYPE sy-subrc .
+    CLASS-METHODS open_job
+      IMPORTING
+        !jobname        TYPE tbtcjob-jobname
+      RETURNING
+        VALUE(jobcount) TYPE tbtcjob-jobcount .
+    CLASS-METHODS close_job
+      IMPORTING
+        !jobname        TYPE tbtcjob-jobname
+        !jobcount       TYPE tbtcjob-jobcount
+        !start_date     TYPE tbtcjob-sdlstrtdt OPTIONAL
+        !start_time     TYPE tbtcjob-sdlstrttm OPTIONAL
+        !eventid        TYPE tbtcjob-eventid OPTIONAL
+        !eventparm      TYPE tbtcjob-eventparm OPTIONAL
+      RETURNING
+        VALUE(rv_subrc) TYPE sy-subrc .
+    CLASS-METHODS am_i_in_job
+      EXPORTING
+        !in_job   TYPE abap_bool
+        !jobcount TYPE btcjobcnt
+        !jobname  TYPE btcjob .
+    CLASS-METHODS is_variant_exists
+      IMPORTING
+        !report         TYPE sy-repid
+        !variant        TYPE rsvar-variant
+      RETURNING
+        VALUE(rv_subrc) TYPE sy-subrc .
+    CLASS-METHODS get_default_variant .
+    CLASS-METHODS get_user_param
+      IMPORTING
+        !iv_parid       TYPE usparam-parid
+      RETURNING
+        VALUE(rv_parva) TYPE usparam-parva .
+    CLASS-METHODS rv_call_display_transaction
+      IMPORTING
+        VALUE(bukrs)    TYPE bukrs DEFAULT '    '
+        VALUE(gjahr)    TYPE gjahr DEFAULT '0000'
+        VALUE(lgnum)    TYPE vbfa-lgnum DEFAULT '   '
+        VALUE(posnr)    TYPE vbap-posnr DEFAULT '000000'
+        VALUE(vbeln)    TYPE vbuk-vbeln
+        VALUE(aufnr)    TYPE vbak-aufnr OPTIONAL
+        VALUE(vbtyp)    TYPE vbuk-vbtyp DEFAULT ' '
+        VALUE(fi_appli) TYPE vbfal-appli DEFAULT '  ' .
+    CLASS-METHODS display_sd_doc
+      IMPORTING
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_so
+      IMPORTING
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_dn
+      IMPORTING
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_iv
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_migo
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_pr
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_po
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_fi
+      IMPORTING
+        VALUE(bukrs) TYPE bukrs DEFAULT '    '
+        VALUE(gjahr) TYPE gjahr DEFAULT '0000'
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_bp
+      IMPORTING
+        !iv_partner TYPE but000-partner .
+    CLASS-METHODS display_co
+      IMPORTING
+        !aufnr TYPE aufnr .
+    CLASS-METHODS display_idoc
+      IMPORTING
+        !iv_docnum TYPE edidc-docnum .
+    CLASS-METHODS add_role
+      IMPORTING
+        !iv_username  TYPE bapibname-bapibname
+        !it_roles     TYPE suid_tt_bapiagr
+      RETURNING
+        VALUE(return) TYPE tt_bapiret2 .
+    CLASS-METHODS swc_call_method
+      IMPORTING
+        VALUE(objtype) TYPE swotobjid-objtype OPTIONAL
+        VALUE(objkey)  TYPE swotobjid-objkey OPTIONAL
+        VALUE(object)  TYPE swotrtime-object OPTIONAL
+        VALUE(method)  TYPE swo_method DEFAULT 'DISPLAY'
+      RETURNING
+        VALUE(return)  TYPE swotreturn .
+    CLASS-METHODS create_billing_by_so
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rv_return) TYPE ty_billing_return .
+    CLASS-METHODS create_billing_by_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rv_return) TYPE ty_billing_return .
+    CLASS-METHODS create_so_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rv_return) TYPE ty_dn_return .
+    CLASS-METHODS create_sto_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rv_return) TYPE ty_dn_return .
+    CLASS-METHODS post_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE likp-vbeln
+        !iv_budat        TYPE budat OPTIONAL
+        !iv_reslo        TYPE reslo OPTIONAL
+      RETURNING
+        VALUE(rv_return) TYPE ty_dn_post_return .
+    CLASS-METHODS reverse_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE likp-vbeln
+        !iv_budat        TYPE budat OPTIONAL
+      RETURNING
+        VALUE(rv_return) TYPE ty_dn_post_return .
+    CLASS-METHODS delete_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE likp-vbeln
+      RETURNING
+        VALUE(rv_return) TYPE bapiret2_t .
+    CLASS-METHODS delete_so
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbak-vbeln
+        !it_posnr        TYPE tt_posnr OPTIONAL
+      RETURNING
+        VALUE(rv_return) TYPE bapiret2_t .
+    CLASS-METHODS close_so
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbak-vbeln
+        !it_posnr        TYPE tt_posnr OPTIONAL
+        VALUE(iv_abgru)  TYPE vbap-abgru
+      RETURNING
+        VALUE(rv_return) TYPE bapiret2_t .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_COMMON IMPLEMENTATION.
+CLASS zcl_common IMPLEMENTATION.
 
 
   METHOD am_i_in_job.
@@ -603,8 +705,8 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 * 调用函数打开文件选择框
     cl_gui_frontend_services=>file_open_dialog(
       EXPORTING
-        default_extension       = cl_gui_frontend_services=>filetype_excel
-        file_filter             = cl_gui_frontend_services=>filetype_excel
+        default_extension       = iv_filter
+        file_filter             = iv_filter
       CHANGING
         file_table              = lt_filetable
         rc                      = lv_rc
@@ -2465,5 +2567,319 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 
     READ TABLE lt_params INTO ls_param WITH KEY parid = iv_parid.
     rv_parva = ls_param-parva.
+  ENDMETHOD.
+
+
+  METHOD upload_file_to_server.
+    DATA: lv_filepath TYPE rlgrap-filename.
+    DATA(ls_return) = upload_file( iv_filename = iv_filename ).
+    IF ls_return-subrc <> 0.
+      rs_return = VALUE #( return = VALUE #( id = '00' type = 'E' number = '001' message = '文件读取错误' ) ).
+      RETURN.
+    ENDIF.
+    DATA(ls_split_file) = split_file( iv_filename ).
+    TRY .
+        "将文件写入到服务器上面的文件
+        lv_filepath = |{ iv_path }/{ ls_split_file-filename }|.
+        OPEN DATASET lv_filepath FOR OUTPUT IN BINARY MODE.
+        IF sy-subrc EQ 0.
+          LOOP AT ls_return-data_tab INTO DATA(ls_tab).
+            TRANSFER ls_tab TO lv_filepath.
+          ENDLOOP.
+          CLOSE DATASET lv_filepath.
+          rs_return = VALUE #( filename = lv_filepath return = VALUE #( id = '00' type = 'S' number = '001' message = '上传成功' ) ).
+        ENDIF.
+      CATCH cx_sy_file_authority .
+        rs_return = VALUE #( return = VALUE #( id = '00' type = 'E' number = '001' message = '保存失败,文件未授权' ) ).
+      CATCH cx_sy_file_open .
+        rs_return = VALUE #( return = VALUE #( id = '00' type = 'E' number = '001' message = '保存失败,文件已打开' ) ).
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD upload_file.
+    CALL METHOD cl_gui_frontend_services=>gui_upload
+      EXPORTING
+        filename                = CONV #( iv_filename )
+        filetype                = 'BIN'
+      IMPORTING
+        filelength              = rs_return-filelength
+*       header                  = lv_header
+      CHANGING
+        data_tab                = rs_return-data_tab
+      EXCEPTIONS
+        file_open_error         = 1
+        file_read_error         = 2
+        no_batch                = 3
+        gui_refuse_filetransfer = 4
+        invalid_type            = 5
+        no_authority            = 6
+        unknown_error           = 7
+        bad_data_format         = 8
+        header_not_allowed      = 9
+        separator_not_allowed   = 10
+        header_too_long         = 11
+        unknown_dp_error        = 12
+        access_denied           = 13
+        dp_out_of_memory        = 14
+        disk_full               = 15
+        dp_timeout              = 16
+        not_supported_by_gui    = 17
+        error_no_gui            = 18
+        OTHERS                  = 19.
+    rs_return-subrc = sy-subrc .
+    IF sy-subrc <> 0.
+      RETURN.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD split_file.
+    CALL FUNCTION 'STPU1_EXTRACT_FILENAME'
+      EXPORTING
+        file_and_path = iv_filename
+      IMPORTING
+        file          = rs_return-filename
+        pathname      = rs_return-pathname.
+    SPLIT rs_return-filename AT '.' INTO TABLE DATA(lt_tab).
+    IF sy-subrc = 0.
+      DATA(lines) = lines( lt_tab ).
+      LOOP AT lt_tab INTO DATA(ls_tab).
+        IF sy-tabix = 1.
+          rs_return-pure_filename = ls_tab.
+        ELSEIF  sy-tabix < lines.
+          rs_return-pure_filename = |{ rs_return-pure_filename }.{ ls_tab }|.
+        ELSE.
+          rs_return-pure_extension = ls_tab.
+        ENDIF.
+      ENDLOOP.
+    ELSE.
+      rs_return-pure_filename = rs_return-filename.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD save_file_dialog.
+    DATA: lv_filename     TYPE rlgrap-filename,
+          lv_fname        TYPE string,
+          lv_path         TYPE string,
+          lv_fullpath     TYPE string,
+          lv_user_action  TYPE i,
+          lv_default_name TYPE string.
+
+    lv_default_name = iv_filename.
+    CALL METHOD cl_gui_frontend_services=>file_save_dialog
+      EXPORTING
+*       window_title         = lv_title
+        default_extension    = 'xls'
+        default_file_name    = lv_default_name
+        file_filter          = cl_gui_frontend_services=>filetype_excel
+*       initial_directory    = 'C:\'
+      CHANGING
+        filename             = lv_fname
+        path                 = lv_path
+        fullpath             = lv_fullpath
+        user_action          = lv_user_action
+      EXCEPTIONS
+        cntl_error           = 1
+        error_no_gui         = 2
+        not_supported_by_gui = 3
+        OTHERS               = 4.
+    CHECK lv_user_action = 0.
+    rv_filename = lv_fullpath.
+  ENDMETHOD.
+
+
+  METHOD download_file.
+    CHECK iv_filename IS NOT INITIAL.
+    cl_gui_frontend_services=>gui_download(
+      EXPORTING
+        filename                = CONV #( iv_filename )
+        filetype                = 'BIN'
+        confirm_overwrite       = abap_true
+      IMPORTING
+        filelength              = DATA(lv_length)
+      CHANGING
+        data_tab                = data_tab
+      EXCEPTIONS
+        file_write_error        = 1
+        no_batch                = 2
+        gui_refuse_filetransfer = 3
+        invalid_type            = 4
+        no_authority            = 5
+        unknown_error           = 6
+        header_not_allowed      = 7
+        separator_not_allowed   = 8
+        filesize_not_allowed    = 9
+        header_too_long         = 10
+        dp_error_create         = 11
+        dp_error_send           = 12
+        dp_error_write          = 13
+        unknown_dp_error        = 14
+        access_denied           = 15
+        dp_out_of_memory        = 16
+        disk_full               = 17
+        dp_timeout              = 18
+        file_not_found          = 19
+        dataprovider_exception  = 20
+        control_flush_error     = 21
+        not_supported_by_gui    = 22
+        error_no_gui            = 23
+        OTHERS                  = 24
+    ).
+    IF sy-subrc <> 0.
+      rs_return = VALUE #( id = '00' type = 'E' number = '001' message = '保存失败' ).
+    ELSE.
+      rs_return = VALUE #( id = '00' type = 'S' number = '001' message = '保存成功' ).
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD download_file_from_server.
+    DATA(ls_return) = read_file( iv_filename = iv_filename_server ).
+    IF ls_return-return-type = 'S'.
+      rs_return = download_file( iv_filename = iv_filename_client data_tab = ls_return-data_tab ).
+    ELSE.
+      rs_return = ls_return-return.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD read_file.
+    DATA: ls_data TYPE ty_pic_tab.
+    TRY.
+        OPEN DATASET iv_filename FOR INPUT IN BINARY MODE.
+        DO.
+          READ DATASET iv_filename INTO ls_data ACTUAL LENGTH DATA(bytes).
+          IF sy-subrc <> 0.
+            EXIT.
+          ENDIF.
+          APPEND ls_data TO rs_return-data_tab.
+        ENDDO.
+        CLOSE DATASET iv_filename.
+        rs_return = VALUE #( BASE rs_return  return = VALUE #( id = '00' type = 'S' number = '001' message = '下载成功' ) ).
+      CATCH  cx_sy_file_authority.
+        rs_return = VALUE #( return = VALUE #( id = '00' type = 'E' number = '001' message = '下载失败,文件未授权' ) ).
+      CATCH cx_sy_file_open .
+        rs_return = VALUE #( return = VALUE #( id = '00' type = 'E' number = '001' message = '下载失败,文件已打开' ) ).
+      CATCH cx_sy_file_access_error.
+        rs_return = VALUE #( return = VALUE #( id = '00' type = 'E' number = '001' message = '下载失败,文件读取错误' ) ).
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD create_url.
+    CALL FUNCTION 'DP_CREATE_URL'
+      EXPORTING
+        type                 = 'IMAGE'                "#EC NOTEXT
+        subtype              = iv_subtype "
+*       size                 = gi_graphic_size
+*       lifetime             = cndp_lifetime_transaction  "
+      TABLES
+        data                 = data_tab
+      CHANGING
+        url                  = rv_url
+      EXCEPTIONS
+        dp_invalid_parameter = 1
+        dp_error_put_table   = 2
+        dp_error_general     = 3
+        OTHERS               = 4.
+  ENDMETHOD.
+
+
+  METHOD resize_image.
+    DATA:lf_xres     TYPE i,
+         lf_yres     TYPE i,
+         lf_xres_new TYPE i,
+         lf_yres_new TYPE i,
+         lf_ratio    TYPE menge_d. "小数.
+
+    TRY.
+        rv_small = iv_original.
+        DATA(lo_image) = NEW cl_fxs_image_processor( ).
+        DATA(lf_handle) = lo_image->add_image( iv_original ).
+        lo_image->get_info(
+          EXPORTING
+            iv_handle = lf_handle
+          IMPORTING
+            ev_xres   = lf_xres
+            ev_yres   = lf_yres ).
+
+        lf_ratio = lf_xres / lf_yres.
+        IF lf_ratio > 1. "宽比高大
+          lf_xres_new = nmin( val1 = lf_xres val2 = iv_max_width )."求出新的最大允许宽度
+          lf_yres_new = lf_xres_new / lf_ratio.
+        ELSE."高比宽大
+          lf_yres_new = nmin( val1 = lf_yres val2 = iv_max_height )."求出新的最大允许高度
+          lf_xres_new = lf_yres_new * lf_ratio.
+        ENDIF.
+
+        IF lf_xres_new >= lf_xres.
+          lo_image->discard_image( lf_handle ).
+          FREE lo_image.
+          RETURN.
+        ENDIF.
+        lo_image->resize(
+          EXPORTING
+            iv_handle = lf_handle
+            iv_xres   = lf_xres_new
+            iv_yres   = lf_yres_new ).
+        rv_small = lo_image->get_image( lf_handle ).
+        lo_image->discard_image( lf_handle ).
+        FREE lo_image.
+      CATCH cx_fxs_image_unsupported.
+      CATCH cx_root.
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD binary_to_xstring.
+    CALL FUNCTION 'SCMS_BINARY_TO_XSTRING'
+      EXPORTING
+        input_length = iv_filelength
+      IMPORTING
+        buffer       = rv_xstring
+      TABLES
+        binary_tab   = data_tab
+      EXCEPTIONS
+        failed       = 1
+        OTHERS       = 2.
+  ENDMETHOD.
+
+
+  METHOD xstring_to_binary.
+    CALL FUNCTION 'SCMS_XSTRING_TO_BINARY'
+      EXPORTING
+        buffer     = iv_xstring
+*       append_to_table = space
+*  IMPORTING
+*       output_length   =
+      TABLES
+        binary_tab = data_tab.
+  ENDMETHOD.
+
+
+  METHOD show_picture.
+    CALL FUNCTION 'ZFUN_DISPLAY_PICTURE'
+      EXPORTING
+        iv_filename = iv_filename
+        io_picture  = io_picture.
+  ENDMETHOD.
+
+
+  METHOD remove_file_from_server.
+    TRY.
+        DELETE DATASET iv_filename .
+        IF sy-subrc = 0.
+          rs_return = VALUE #( id = '00' type = 'S' number = '001' message = '删除成功' ) .
+        ELSE.
+          rs_return = VALUE #( id = '00' type = 'S' number = '001' message = '删除失败' ) .
+        ENDIF.
+      CATCH  cx_sy_file_authority.
+        rs_return = VALUE #( id = '00' type = 'S' number = '001' message = '删除失败,文件未授权' ) .
+      CATCH cx_sy_file_open .
+        rs_return = VALUE #( id = '00' type = 'S' number = '001' message = '删除失败,文件已打开' ) .
+    ENDTRY.
   ENDMETHOD.
 ENDCLASS.

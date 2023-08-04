@@ -263,3 +263,55 @@ MODULE user_command_0300 INPUT.
       PERFORM save_as_data.
   ENDCASE.
 ENDMODULE.
+*&---------------------------------------------------------------------*
+*&      Module  USER_COMMAND_0100  INPUT
+*&---------------------------------------------------------------------*
+*       text
+*----------------------------------------------------------------------*
+MODULE user_command_0100 INPUT.
+  ok_code1 = sy-ucomm.
+  CLEAR sy-ucomm.
+  CASE ok_code1.
+    WHEN 'BACK' OR 'EXIT' OR 'CANCEL'.
+      free_object go_picture_container.
+      free_object go_picture.
+      LEAVE TO SCREEN 0.
+* Change the display mode
+    WHEN 'NORMAL'.
+      CALL METHOD go_picture->set_display_mode
+        EXPORTING
+          display_mode = cl_gui_picture=>display_mode_normal.
+
+    WHEN 'STRETCH'.
+      CALL METHOD go_picture->set_display_mode
+        EXPORTING
+          display_mode = cl_gui_picture=>display_mode_stretch.
+
+    WHEN 'FIT'.
+      CALL METHOD go_picture->set_display_mode
+        EXPORTING
+          display_mode = cl_gui_picture=>display_mode_fit.
+
+    WHEN 'NORMAL_CTR'.
+      CALL METHOD go_picture->set_display_mode
+        EXPORTING
+          display_mode = cl_gui_picture=>display_mode_normal_center.
+
+    WHEN 'FIT_CTR'.
+      CALL METHOD go_picture->set_display_mode
+        EXPORTING
+          display_mode = cl_gui_picture=>display_mode_fit_center.
+    WHEN 'DOWN'.
+      DATA(lv_filename) = zcl_common=>save_file_dialog( iv_filename = gv_filename ).
+      CHECK lv_filename IS NOT INITIAL.
+      zcl_common=>download_file( iv_filename = lv_filename data_tab = gt_pic_tab ).
+
+* Clear the picture
+    WHEN 'CLEAR'.
+      CALL METHOD go_picture->clear_picture.
+
+* Load a new picture
+    WHEN space.
+
+  ENDCASE.
+ENDMODULE.

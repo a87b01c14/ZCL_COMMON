@@ -16,6 +16,7 @@ TABLES:
 *       Mandanten-Tabelle: Bewertungskreis = Werk oder Buchungskreis
   tcurm.
 
+* excel显示 begin
 DATA: cl_writer   TYPE REF TO zif_excel_writer,
       cl_error    TYPE REF TO zcx_excel,
       cl_excel    TYPE REF TO zcl_excel,
@@ -31,3 +32,20 @@ DATA:error          TYPE REF TO i_oi_error,
 DATA: xdata     TYPE xstring,             " Will be used for sending as email
       t_rawdata TYPE solix_tab,           " Will be used for downloading or open directly
       bytecount TYPE i.                   " Will be used for downloading or open directly
+* excel显示 end
+
+* 图片显示 begin
+DATA go_picture_container TYPE REF TO cl_gui_custom_container.
+DATA go_picture TYPE REF TO cl_gui_picture.
+DATA gv_url TYPE epssurl.
+DATA gt_pic_tab TYPE zcl_common=>tt_pic_tab.
+DATA gv_filename TYPE rlgrap-filename.
+* 图片显示 end
+
+
+DEFINE free_object.
+  IF &1 IS NOT INITIAL.
+    CALL METHOD &1->free.
+    FREE &1.
+  ENDIF.
+end-of-definition.
