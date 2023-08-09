@@ -84,6 +84,12 @@ public section.
       value(YEARS) type T5A4A-DLYYR
     returning
       value(CALC_DATE) type P0001-BEGDA .
+  class-methods GO_BACK_MONTHS
+    importing
+      !CURRDATE type SY-DATUM
+      !BACKMONTHS type NUMC3
+    returning
+      value(NEWDATE) type SY-DATUM .
   class-methods VIEW_RANGETAB_TO_SELLIST
     importing
       !FIELDNAME type VIMSELLIST-VIEWFIELD
@@ -96,6 +102,12 @@ public section.
       !ACTION type CHAR1 default 'S'
       !VIEW_NAME type DD02V-TABNAME
       !DBA_SELLIST type TT_VIMSELLIST optional .
+  class-methods COMBINE_SELTABS
+    importing
+      !IT_NAMED_SELTABS type CL_SHDB_SELTAB=>TT_NAMED_SELTABLES
+      !IV_CLIENT_FIELD type STRING optional
+    returning
+      value(RV_WHERE) type STRING .
   class-methods SAVE_FILE_DIALOG
     importing
       !IV_FILENAME type RLGRAP-FILENAME optional
@@ -2991,9 +3003,24 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         date      = date
         days      = days
         months    = months
-        signum    = '+'
+        signum    = signum
         years     = years
       IMPORTING
         calc_date = calc_date.
+  ENDMETHOD.
+
+
+  METHOD go_back_months.
+    CALL FUNCTION 'CCM_GO_BACK_MONTHS'
+      EXPORTING
+        currdate   = currdate
+        backmonths = backmonths
+      IMPORTING
+        newdate    = newdate.
+  ENDMETHOD.
+
+
+  METHOD combine_seltabs.
+    rv_where = cl_shdb_seltab=>combine_seltabs( it_named_seltabs = it_named_seltabs iv_client_field = iv_client_field ).
   ENDMETHOD.
 ENDCLASS.
