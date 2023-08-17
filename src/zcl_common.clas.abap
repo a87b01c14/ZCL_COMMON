@@ -67,6 +67,9 @@ public section.
   class-methods ADD_AUDIT
     changing
       !CS_DATA type ANY .
+  class-methods CREATE_UUID_C32
+    returning
+      value(UUID) type SYSUUID_C32 .
   class-methods AUTHORITY_CHECK_TCODE
     importing
       !TCODE type TCODE .
@@ -345,53 +348,53 @@ public section.
     importing
       value(IV_VBELN) type VBELN
     returning
-      value(RV_RETURN) type TY_BILLING_RETURN .
+      value(RS_RETURN) type TY_BILLING_RETURN .
   class-methods CREATE_BILLING_BY_DN
     importing
       value(IV_VBELN) type VBELN
     returning
-      value(RV_RETURN) type TY_BILLING_RETURN .
+      value(RS_RETURN) type TY_BILLING_RETURN .
   class-methods CREATE_SO_DN
     importing
       value(IV_VBELN) type VBELN
     returning
-      value(RV_RETURN) type TY_DN_RETURN .
+      value(RS_RETURN) type TY_DN_RETURN .
   class-methods CREATE_STO_DN
     importing
       value(IV_VBELN) type VBELN
     returning
-      value(RV_RETURN) type TY_DN_RETURN .
+      value(RS_RETURN) type TY_DN_RETURN .
   class-methods POST_DN
     importing
       value(IV_VBELN) type LIKP-VBELN
       !IV_BUDAT type BUDAT optional
       !IV_RESLO type RESLO optional
     returning
-      value(RV_RETURN) type TY_DN_POST_RETURN .
+      value(RS_RETURN) type TY_DN_POST_RETURN .
   class-methods REVERSE_DN
     importing
       value(IV_VBELN) type LIKP-VBELN
       !IV_BUDAT type BUDAT optional
     returning
-      value(RV_RETURN) type TY_DN_POST_RETURN .
+      value(RS_RETURN) type TY_DN_POST_RETURN .
   class-methods DELETE_DN
     importing
       value(IV_VBELN) type LIKP-VBELN
     returning
-      value(RV_RETURN) type BAPIRET2_T .
+      value(RT_RETURN) type BAPIRET2_T .
   class-methods DELETE_SO
     importing
       value(IV_VBELN) type VBAK-VBELN
       !IT_POSNR type TT_POSNR optional
     returning
-      value(RV_RETURN) type BAPIRET2_T .
+      value(RT_RETURN) type BAPIRET2_T .
   class-methods CLOSE_SO
     importing
       value(IV_VBELN) type VBAK-VBELN
       !IT_POSNR type TT_POSNR optional
       value(IV_ABGRU) type VBAP-ABGRU
     returning
-      value(RV_RETURN) type BAPIRET2_T .
+      value(RT_RETURN) type BAPIRET2_T .
   class-methods BAPIRETURN_GET1
     importing
       !TYPE type BAPIRETURN-TYPE
@@ -414,6 +417,14 @@ public section.
       !PAR4 type SY-MSGV4 optional
     returning
       value(BAPIRETURN) type BAPIRET2 .
+  class-methods BAPIRETURN_PROCESS
+    importing
+      !IT_RETURN type BAPIRET2_TT
+    returning
+      value(RS_RETURN) type BAPIRET2 .
+  class-methods BREAK
+    importing
+      !IV_PARAM type USR05-PARID default 'ESP' .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -1699,7 +1710,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     IF ls_vbak IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '002' par1 = CONV #( iv_vbeln ) ).
       APPEND ls_return TO lt_return.
-      rv_return = VALUE #( return = lt_return ).
+      rs_return = VALUE #( return = lt_return ).
       RETURN.
     ENDIF.
     SELECT SINGLE vbeln,fkdat,vbtyp FROM vkdfs INTO @DATA(ls_vkdfs) WHERE vbeln = @iv_vbeln.
@@ -1707,14 +1718,14 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     IF ls_vkdfs IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VF' number = '016' ).
       APPEND ls_return TO lt_return.
-      rv_return = VALUE #( return = lt_return ).
+      rs_return = VALUE #( return = lt_return ).
       RETURN.
     ENDIF.
     "已完全开票项
     IF ls_vbak-fksak = 'C'.
       ls_return = bapireturn_get2( type = 'E' cl = 'VF' number = '017' ).
       APPEND ls_return TO lt_return.
-      rv_return = VALUE #( return = lt_return ).
+      rs_return = VALUE #( return = lt_return ).
       RETURN.
     ENDIF.
     SELECT vbeln,posnr FROM vbap INTO TABLE @DATA(lt_vbap) WHERE vbeln = @iv_vbeln.
@@ -1735,11 +1746,11 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         testrun       = ''
       TABLES
         billingdatain = lt_bapivbrk
-        return        = rv_return-return
-        errors        = rv_return-errors
-        success       = rv_return-success.
+        return        = rs_return-return
+        errors        = rs_return-errors
+        success       = rs_return-success.
 
-    READ TABLE rv_return-success INTO DATA(ls_success) INDEX 1.
+    READ TABLE rs_return-success INTO DATA(ls_success) INDEX 1.
     IF sy-subrc = 0 AND ls_success-bill_doc IS NOT INITIAL.
       CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
         EXPORTING
@@ -1778,23 +1789,23 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     IF ls_likp IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '002' par1 = CONV #( iv_vbeln ) ).
       APPEND ls_return TO lt_return.
-      rv_return-return = lt_return .
+      rs_return-return = lt_return .
       RETURN.
     ENDIF.
-    rv_return-fkivk = ls_likp-fkivk.
-    rv_return-fkstk = ls_likp-fkstk.
+    rs_return-fkivk = ls_likp-fkivk.
+    rs_return-fkstk = ls_likp-fkstk.
     "无需开票
     IF ls_likp-fkivk IS INITIAL AND ls_likp-fkstk IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VF' number = '016' ).
       APPEND ls_return TO lt_return.
-      rv_return-return = lt_return .
+      rs_return-return = lt_return .
       RETURN.
     ENDIF.
     "已完全开票项
     IF ( ls_likp-fkivk = 'C' AND ls_likp-fkstk IS INITIAL ) OR ( ls_likp-fkstk = 'C' AND ls_likp-fkivk IS INITIAL ).
       ls_return = bapireturn_get2( type = 'E' cl = 'VF' number = '017' ).
       APPEND ls_return TO lt_return.
-      rv_return-return = lt_return .
+      rs_return-return = lt_return .
       RETURN.
     ENDIF.
     SELECT vbeln,posnr FROM lips INTO TABLE @DATA(lt_lips) WHERE vbeln = @iv_vbeln.
@@ -1815,11 +1826,11 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         testrun       = ''
       TABLES
         billingdatain = lt_bapivbrk
-        return        = rv_return-return
-        errors        = rv_return-errors
-        success       = rv_return-success.
+        return        = rs_return-return
+        errors        = rs_return-errors
+        success       = rs_return-success.
 
-    READ TABLE rv_return-success INTO DATA(ls_success) INDEX 1.
+    READ TABLE rs_return-success INTO DATA(ls_success) INDEX 1.
     IF sy-subrc = 0 AND ls_success-bill_doc IS NOT INITIAL.
       CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
         EXPORTING
@@ -1827,13 +1838,13 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       "查底表，确认更新完毕,最大等10分钟
       DO 600 TIMES.
 *      SELECT SINGLE @abap_true FROM vbrk INTO @DATA(lv_exists) WHERE vbeln = @ls_success-bill_doc.
-        SELECT SINGLE fkstk,fkivk FROM likp INTO ( @rv_return-fkstk_ret,@rv_return-fkivk_ret ) WHERE vbeln = @iv_vbeln.
-        IF rv_return-fkstk IS NOT INITIAL AND rv_return-fkstk <> 'C'.
-          IF rv_return-fkstk_ret = 'C'.
+        SELECT SINGLE fkstk,fkivk FROM likp INTO ( @rs_return-fkstk_ret,@rs_return-fkivk_ret ) WHERE vbeln = @iv_vbeln.
+        IF rs_return-fkstk IS NOT INITIAL AND rs_return-fkstk <> 'C'.
+          IF rs_return-fkstk_ret = 'C'.
             EXIT.
           ENDIF.
         ELSE.
-          IF rv_return-fkivk_ret = 'C'.
+          IF rs_return-fkivk_ret = 'C'.
             EXIT.
           ENDIF.
         ENDIF.
@@ -1865,19 +1876,19 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     "销售单不存在
     IF ls_vbakuk IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '002' par1 = CONV #( iv_vbeln ) ).
-      APPEND ls_return TO rv_return-return.
+      APPEND ls_return TO rs_return-return.
       RETURN.
     ENDIF.
     "无需交货
     IF ls_vbakuk-lfgsk IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '461' ).
-      APPEND ls_return TO rv_return-return.
+      APPEND ls_return TO rs_return-return.
       RETURN.
     ENDIF.
     "已完全交货
     IF ls_vbakuk-lfgsk = 'C'.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '455' ).
-      APPEND ls_return TO rv_return-return.
+      APPEND ls_return TO rs_return-return.
       RETURN.
     ENDIF.
 
@@ -1898,21 +1909,21 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 *       ship_point        = ship_point
         due_date          = lv_due_date
       IMPORTING
-        delivery          = rv_return-vbeln
+        delivery          = rs_return-vbeln
       TABLES
         sales_order_items = lt_dn_items
-        return            = rv_return-return.
+        return            = rs_return-return.
 
-    LOOP AT rv_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+    LOOP AT rs_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
       EXIT.
     ENDLOOP.
-    IF sy-subrc <> 0 AND rv_return-vbeln IS NOT INITIAL.
+    IF sy-subrc <> 0 AND rs_return-vbeln IS NOT INITIAL.
       CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
         EXPORTING
           wait = 'X'.
       "查底表，确认更新完毕
       DO 600 TIMES.
-        SELECT SINGLE @abap_true FROM likp INTO @DATA(lv_exists) WHERE vbeln = @rv_return-vbeln.
+        SELECT SINGLE @abap_true FROM likp INTO @DATA(lv_exists) WHERE vbeln = @rs_return-vbeln.
         IF sy-subrc = 0.
           EXIT.
         ELSE.
@@ -1946,14 +1957,14 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     "STO单不存在
     IF ls_ekko IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '002' par1 = CONV #( iv_vbeln ) ).
-      APPEND ls_return TO rv_return-return.
+      APPEND ls_return TO rs_return-return.
       RETURN.
     ENDIF.
     SELECT SINGLE vbeln FROM vetvg INTO @DATA(ls_vetvg) WHERE vbeln = @iv_vbeln.
     "无需交货或交货完成
     IF ls_vetvg IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '455' ).
-      APPEND ls_return TO rv_return-return.
+      APPEND ls_return TO rs_return-return.
       RETURN.
     ENDIF.
 
@@ -1974,30 +1985,30 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 *       ship_point        = ship_point
         due_date          = lv_due_date
       IMPORTING
-        delivery          = rv_return-vbeln
+        delivery          = rs_return-vbeln
       TABLES
         stock_trans_items = lt_dn_items
         created_items     = lt_created_items
-        return            = rv_return-return.
+        return            = rs_return-return.
     "检查创建的行项目数
-    IF rv_return-vbeln IS NOT INITIAL.
+    IF rs_return-vbeln IS NOT INITIAL.
       IF lines( lt_created_items ) <> lines( lt_dn_items ).
         ls_return = bapireturn_get2( type = 'E' cl = '00' number = '001' par1 = TEXT-t04  ).
-        APPEND ls_return TO rv_return-return.
+        APPEND ls_return TO rs_return-return.
         CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
         RETURN.
       ENDIF.
     ENDIF.
-    LOOP AT rv_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+    LOOP AT rs_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
       EXIT.
     ENDLOOP.
-    IF sy-subrc <> 0 AND rv_return-vbeln IS NOT INITIAL.
+    IF sy-subrc <> 0 AND rs_return-vbeln IS NOT INITIAL.
       CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
         EXPORTING
           wait = 'X'.
       "查底表，确认更新完毕
       DO 600 TIMES.
-        SELECT SINGLE @abap_true FROM likp INTO @DATA(lv_exists) WHERE vbeln = @rv_return-vbeln.
+        SELECT SINGLE @abap_true FROM likp INTO @DATA(lv_exists) WHERE vbeln = @rs_return-vbeln.
         IF sy-subrc = 0.
           EXIT.
         ELSE.
@@ -2034,13 +2045,13 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     "交货单不存在
     IF ls_likp IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '002' par1 = CONV #( iv_vbeln ) ).
-      APPEND ls_return TO rv_return-return.
+      APPEND ls_return TO rs_return-return.
       RETURN.
     ENDIF.
     "交货已过账
     IF ls_likp-wbstk = 'C'.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '602' ).
-      APPEND ls_return TO rv_return-return.
+      APPEND ls_return TO rs_return-return.
       RETURN.
     ENDIF.
 
@@ -2101,9 +2112,9 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         item_control     = lt_item_control
         item_data_spl    = lt_item_spl
         header_deadlines = lt_header_deadlines
-        return           = rv_return-return.
+        return           = rs_return-return.
 
-    LOOP AT rv_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+    LOOP AT rs_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
       EXIT.
     ENDLOOP.
     IF sy-subrc <> 0.
@@ -2128,8 +2139,8 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         INTO TABLE @DATA(lt_vbfa)
         UP TO 1 ROWS.
       CHECK sy-subrc = 0.
-      rv_return-mblnr = lt_vbfa[ 1 ]-vbeln.
-      rv_return-mjahr = lt_vbfa[ 1 ]-mjahr.
+      rs_return-mblnr = lt_vbfa[ 1 ]-vbeln.
+      rs_return-mjahr = lt_vbfa[ 1 ]-mjahr.
     ELSE.
       CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
     ENDIF.
@@ -2159,13 +2170,13 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     "交货单不存在
     IF ls_likp IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '002' par1 = CONV #( iv_vbeln ) ).
-      APPEND ls_return TO rv_return.
+      APPEND ls_return TO rt_return.
       RETURN.
     ENDIF.
     "项目不能删除
     IF ls_likp-wbstk IS NOT INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '111' ).
-      APPEND ls_return TO rv_return.
+      APPEND ls_return TO rt_return.
       RETURN.
     ENDIF.
 
@@ -2192,9 +2203,9 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         item_control   = lt_item_control
 *       item_data_spl  = lt_item_spl
 *       header_deadlines = lt_header_deadlines
-        return         = rv_return.
+        return         = rt_return.
 
-    LOOP AT rv_return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+    LOOP AT rt_return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
       EXIT.
     ENDLOOP.
     IF sy-subrc <> 0.
@@ -2232,15 +2243,15 @@ CLASS ZCL_COMMON IMPLEMENTATION.
           salesdocument    = iv_vbeln
           order_header_inx = ls_headx
         TABLES
-          return           = rv_return
+          return           = rt_return
           order_item_in    = lt_item
           order_item_inx   = lt_itemx.
     ELSE.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '002' par1 = CONV #( iv_vbeln ) ).
-      APPEND ls_return TO rv_return.
+      APPEND ls_return TO rt_return.
       RETURN.
     ENDIF.
-    LOOP AT rv_return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+    LOOP AT rt_return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
       EXIT.
     ENDLOOP.
     IF sy-subrc <> 0.
@@ -2271,13 +2282,13 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     "交货单不存在
     IF ls_likp IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '002' par1 = CONV #( iv_vbeln ) ).
-      APPEND ls_return TO rv_return-return.
+      APPEND ls_return TO rs_return-return.
       RETURN.
     ENDIF.
     "交货未过账
     IF ls_likp-wbstk NA 'BC'.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '001' par1 = CONV #( TEXT-t02 ) ).
-      APPEND ls_return TO rv_return-return.
+      APPEND ls_return TO rs_return-return.
       RETURN.
     ENDIF.
 
@@ -2305,9 +2316,9 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     IF sy-subrc <> 0.
       lv_error = abap_true.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '001' par1 = CONV #( TEXT-t03 ) ).
-      APPEND ls_return TO rv_return-return.
+      APPEND ls_return TO rs_return-return.
     ENDIF.
-    rv_return-return = CORRESPONDING #( BASE ( rv_return-return  )
+    rs_return-return = CORRESPONDING #( BASE ( rs_return-return  )
                                         lt_mesg MAPPING type = msgty
                                                         id = arbgb
                                                         number = txtnr
@@ -2315,7 +2326,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
                                                         message_v2 = msgv2
                                                         message_v3 = msgv3
                                                         message_v4 = msgv4 ).
-    LOOP AT rv_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+    LOOP AT rs_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
       EXIT.
     ENDLOOP.
     IF sy-subrc <> 0.
@@ -2329,8 +2340,8 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         INTO TABLE @DATA(lt_vbfa_h)
         UP TO 1 ROWS.
       CHECK sy-subrc = 0.
-      rv_return-mblnr = lt_vbfa_h[ 1 ]-vbeln.
-      rv_return-mjahr = lt_vbfa_h[ 1 ]-mjahr.
+      rs_return-mblnr = lt_vbfa_h[ 1 ]-vbeln.
+      rs_return-mjahr = lt_vbfa_h[ 1 ]-mjahr.
     ELSE.
       CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
     ENDIF.
@@ -2364,15 +2375,15 @@ CLASS ZCL_COMMON IMPLEMENTATION.
           salesdocument    = iv_vbeln
           order_header_inx = ls_headx
         TABLES
-          return           = rv_return
+          return           = rt_return
           order_item_in    = lt_item
           order_item_inx   = lt_itemx.
     ELSE.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '002' par1 = CONV #( iv_vbeln ) ).
-      APPEND ls_return TO rv_return.
+      APPEND ls_return TO rt_return.
       RETURN.
     ENDIF.
-    LOOP AT rv_return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
+    LOOP AT rt_return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
       EXIT.
     ENDLOOP.
     IF sy-subrc <> 0.
@@ -3022,5 +3033,38 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 
   METHOD combine_seltabs.
     rv_where = cl_shdb_seltab=>combine_seltabs( it_named_seltabs = it_named_seltabs iv_client_field = iv_client_field ).
+  ENDMETHOD.
+
+
+  METHOD create_uuid_c32.
+    TRY.
+        uuid = cl_system_uuid=>if_system_uuid_static~create_uuid_c32( ).
+      CATCH cx_uuid_error.
+    ENDTRY.
+  ENDMETHOD.
+
+
+  METHOD bapireturn_process.
+    CLEAR rs_return.
+    LOOP AT it_return INTO DATA(ls_return) WHERE type CA 'AEX'.
+      rs_return-message = COND #( WHEN rs_return-message IS INITIAL THEN ls_return-message ELSE |{ rs_return-message },{ ls_return-message }|  ).
+    ENDLOOP.
+    IF sy-subrc <> 0.
+      rs_return-type = 'S'.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+    ELSE.
+      rs_return-type = 'E'.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD break.
+    DATA(lv_param_val) = get_user_param( iv_param ) .
+    IF lv_param_val = 'X'.
+      BREAK-POINT.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
