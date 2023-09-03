@@ -2691,11 +2691,11 @@ CLASS ZCL_EXCEL_WORKSHEET IMPLEMENTATION.
     DATA lv_tabix TYPE i.
 
     lv_max_col =  me->get_highest_column( ).
-    IF iv_max_col IS SUPPLIED AND iv_max_col < lv_max_col.
+    IF iv_max_col IS SUPPLIED AND iv_max_col IS NOT INITIAL AND iv_max_col < lv_max_col.
       lv_max_col = iv_max_col.
     ENDIF.
     lv_max_row =  me->get_highest_row( ).
-    IF iv_max_row IS SUPPLIED AND iv_max_row < lv_max_row.
+    IF iv_max_row IS SUPPLIED AND iv_max_row IS NOT INITIAL AND iv_max_row < lv_max_row.
       lv_max_row = iv_max_row.
     ENDIF.
 
@@ -2757,11 +2757,11 @@ CLASS ZCL_EXCEL_WORKSHEET IMPLEMENTATION.
 
                 me->get_cell(
                   EXPORTING
-                    ip_column  = lv_actual_col    " Cell Column
-                    ip_row     = lv_actual_row    " Cell Row
+                    ip_column = lv_actual_col    " Cell Column
+                    ip_row    = lv_actual_row    " Cell Row
                   IMPORTING
-                    ep_value   = lv_value    " Cell Value
-                    ep_rc      = lv_rc    " Return Value of ABAP Statements
+                    ep_value  = lv_value    " Cell Value
+                    ep_rc     = lv_rc    " Return Value of ABAP Statements
                 ).
                 IF lv_rc <> 0
                   AND lv_rc <> 4                                                   "No found error means, zero/no value in cell

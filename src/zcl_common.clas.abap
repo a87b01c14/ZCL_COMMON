@@ -87,12 +87,42 @@ public section.
       value(YEARS) type T5A4A-DLYYR
     returning
       value(CALC_DATE) type P0001-BEGDA .
+  class-methods TD_ADD
+    importing
+      !DATE type D
+      !TIME type T
+      !SECS type NUMERIC
+    exporting
+      !RES_DATE type D
+      !RES_TIME type T .
+  class-methods TD_SUBTRACT
+    importing
+      !DATE1 type D
+      !TIME1 type T
+      !DATE2 type D
+      !TIME2 type T
+    exporting
+      value(RES_SECS) type NUMERIC .
   class-methods GO_BACK_MONTHS
     importing
       !CURRDATE type SY-DATUM
       !BACKMONTHS type NUMC3
     returning
       value(NEWDATE) type SY-DATUM .
+  class-methods CONVERT_ABAP_TIMESTAMP_TO_JAVA
+    importing
+      !IV_DATE type SYDATE
+      !IV_TIME type SYUZEIT
+      !IV_MSEC type NUM03 default 000
+    exporting
+      !EV_TIMESTAMP type STRING .
+  class-methods CONVERT_JAVA_TIMESTAMP_TO_ABAP
+    importing
+      !IV_TIMESTAMP type STRING
+    exporting
+      !EV_DATE type SYDATE
+      !EV_TIME type SYUZEIT
+      !EV_MSEC type NUM03 .
   class-methods VIEW_RANGETAB_TO_SELLIST
     importing
       !FIELDNAME type VIMSELLIST-VIEWFIELD
@@ -130,8 +160,8 @@ public section.
       !IV_FILENAME type RLGRAP-FILENAME
       !IV_SKIPPED_ROWS type I
       !IV_SKIPPED_COLS type I
-      !IV_MAX_COL type I
-      !IV_MAX_ROW type I
+      !IV_MAX_COL type I optional
+      !IV_MAX_ROW type I optional
     exporting
       !ET_TABLE type STANDARD TABLE
     exceptions
@@ -3062,9 +3092,42 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 
 
   METHOD break.
-    DATA(lv_param_val) = get_user_param( iv_param ) .
-    IF lv_param_val = 'X'.
+    IF get_user_param( iv_param ) = 'X'.
       BREAK-POINT.
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD td_add.
+    cl_abap_tstmp=>td_add( EXPORTING date     = date
+                                     time     = time
+                                     secs     = secs
+                           IMPORTING res_date = res_date
+                                     res_time = res_time ).
+  ENDMETHOD.
+
+
+  METHOD td_subtract.
+    cl_abap_tstmp=>td_subtract( EXPORTING date1    = date1
+                                          time1    = time1
+                                          date2    = date2
+                                          time2    = time2
+                                IMPORTING res_secs = res_secs ).
+  ENDMETHOD.
+
+
+  METHOD convert_abap_timestamp_to_java.
+    cl_pco_utility=>convert_abap_timestamp_to_java( EXPORTING iv_date      = iv_date
+                                                              iv_time      = iv_time
+                                                              iv_msec      = iv_msec
+                                                    IMPORTING ev_timestamp = ev_timestamp ).
+  ENDMETHOD.
+
+
+  METHOD convert_java_timestamp_to_abap.
+    cl_pco_utility=>convert_java_timestamp_to_abap( EXPORTING iv_timestamp = iv_timestamp
+                                                    IMPORTING ev_date      = ev_date
+                                                              ev_time      = ev_time
+                                                              ev_msec      = ev_msec ).
   ENDMETHOD.
 ENDCLASS.
