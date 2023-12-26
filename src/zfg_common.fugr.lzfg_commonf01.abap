@@ -35,6 +35,10 @@ FORM release_objects .
     ENDIF.
   ENDIF.
 
+  IF cl_writer IS BOUND.
+    FREE cl_writer.
+  ENDIF.
+
 ENDFORM.
 *&---------------------------------------------------------------------*
 *&      Form  FRM_SHOW_EXCEL

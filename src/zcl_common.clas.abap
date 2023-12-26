@@ -22,9 +22,10 @@ public section.
       END OF ty_dn_return .
   types:
     BEGIN OF ty_dn_post_return,
-        mblnr  TYPE mblnr,
-        mjahr  TYPE mjahr,
-        return TYPE bapiret2_t,
+        mblnr   TYPE mblnr,
+        mjahr   TYPE mjahr,
+        return  TYPE bapiret2_t,
+        message TYPE string,
       END OF ty_dn_post_return .
   types:
     tt_posnr TYPE STANDARD TABLE OF /cwm/r_posnr .
@@ -34,6 +35,14 @@ public section.
         jobcount TYPE tbtcjob-jobcount,
         return   TYPE bapiret2,
       END OF ty_job_return .
+  types:
+    BEGIN OF ty_acc_doc_return,
+        bukrs   TYPE bkpf-bukrs,
+        belnr   TYPE bkpf-belnr,
+        gjahr   TYPE bkpf-gjahr,
+        return  TYPE bapiret2_t,
+        message TYPE string,
+      END OF ty_acc_doc_return .
   types:
     BEGIN OF ty_pic_tab,
         line(255) TYPE x,
@@ -49,6 +58,7 @@ public section.
   types:
     BEGIN OF ty_upload_server_return,
         filename TYPE rlgrap-filename, "文件名+扩展名
+        url      TYPE url,
         return   TYPE bapiret2,
       END OF ty_upload_server_return .
   types:
@@ -56,6 +66,11 @@ public section.
         data_tab TYPE tt_pic_tab,
         return   TYPE bapiret2,
       END OF ty_read_file_return .
+  types:
+    BEGIN OF ty_bin2str_return,
+        text_buffer   TYPE string,
+        output_length TYPE i,
+      END OF ty_bin2str_return .
   types:
     BEGIN OF ty_split_file,
         pure_filename  TYPE rlgrap-filename, "纯文件名
@@ -65,14 +80,71 @@ public section.
       END OF ty_split_file .
 
   class-methods ADD_AUDIT
+    importing
+      value(IV_UPDATEFLAG) type UPDKZ_D default ''
     changing
       !CS_DATA type ANY .
+  class-methods CONFIRM
+    importing
+      value(IV_QUESTION) type STRING optional
+    returning
+      value(RV_ANSWER) type CHAR1 .
+  class-methods READ_TEXT
+    importing
+      !ID type THEAD-TDID
+      value(LANGUAGE) type THEAD-TDSPRAS optional
+      !NAME type THEAD-TDNAME
+      !OBJECT type THEAD-TDOBJECT
+    returning
+      value(RV_TEXT) type STRING .
   class-methods CREATE_UUID_C32
     returning
       value(UUID) type SYSUUID_C32 .
   class-methods AUTHORITY_CHECK_TCODE
     importing
       !TCODE type TCODE .
+  class-methods AUTHORITY_CHECK_BUKRS_RANGE
+    importing
+      !IR_BUKRS type BUKRS_RAN_ITAB
+    returning
+      value(RV_SUBRC) like SY-SUBRC .
+  class-methods AUTHORITY_CHECK_BUKRS
+    importing
+      !IV_BUKRS type BUKRS
+    returning
+      value(RV_SUBRC) like SY-SUBRC .
+  class-methods AUTHORITY_CHECK_WERKS_RANGE
+    importing
+      !IR_WERKS type J_1GVL_RNG_WERKS_T
+      !IV_AUTH_OBJ type CLIKE default 'M_MATE_WRK'
+    returning
+      value(RV_SUBRC) like SY-SUBRC .
+  class-methods AUTHORITY_CHECK_WERKS
+    importing
+      !IV_WERKS type WERKS_D
+      !IV_AUTH_OBJ type CLIKE default 'M_MATE_WRK'
+    returning
+      value(RV_SUBRC) like SY-SUBRC .
+  class-methods AUTHORITY_CHECK_VKORG_RANGE
+    importing
+      !IR_VKORG type VKORG_RAN_ITAB
+    returning
+      value(RV_SUBRC) like SY-SUBRC .
+  class-methods AUTHORITY_CHECK_VKORG
+    importing
+      !IV_VKORG type VKORG
+    returning
+      value(RV_SUBRC) like SY-SUBRC .
+  class-methods AUTHORITY_CHECK_EKORG_RANGE
+    importing
+      !IR_EKORG type EKORG_RAN_ITAB
+    returning
+      value(RV_SUBRC) like SY-SUBRC .
+  class-methods AUTHORITY_CHECK_EKORG
+    importing
+      !IV_EKORG type EKORG
+    returning
+      value(RV_SUBRC) like SY-SUBRC .
   class-methods GET_MONTH_LASTDAY
     importing
       value(IV_BEGDA) type BEGDA
@@ -231,6 +303,11 @@ public section.
       !IV_MAX_HEIGHT type I default 1024
     returning
       value(RV_SMALL) type XSTRING .
+  class-methods STRING_TO_XSTRING
+    importing
+      !IV_STRING type STRING
+    returning
+      value(RV_XSTRING) type XSTRING .
   class-methods XSTRING_TO_BINARY
     importing
       !IV_XSTRING type XSTRING
@@ -242,6 +319,12 @@ public section.
       !DATA_TAB type ZCL_COMMON=>TT_PIC_TAB
     returning
       value(RV_XSTRING) type XSTRING .
+  class-methods BINARY_TO_STRING
+    importing
+      !IV_FILELENGTH type I
+      !DATA_TAB type ZCL_COMMON=>TT_PIC_TAB
+    returning
+      value(RS_RETURN) type TY_BIN2STR_RETURN .
   class-methods SHOW_PICTURE
     importing
       !IV_FILENAME type RLGRAP-FILENAME
@@ -254,6 +337,7 @@ public section.
       !IV_COUNT type ZECOUNT
       !IV_OBJ_D type ZEOBJECT_D
       !IV_REPEAT type ZEREPEAT optional
+      !IV_COMMIT type ABAP_BOOL default ABAP_TRUE
     returning
       value(RV_SEQ) type ZESEQ .
   class-methods SHOW_PROGRESSBAR
@@ -315,6 +399,11 @@ public section.
       !IV_PARID type USPARAM-PARID
     returning
       value(RV_PARVA) type USPARAM-PARVA .
+  class-methods HAS_EMOJI
+    importing
+      !IV_STR type STRING
+    returning
+      value(RV_VALUE) type ABAP_BOOL .
   class-methods RV_CALL_DISPLAY_TRANSACTION
     importing
       value(BUKRS) type BUKRS default '    '
@@ -357,6 +446,9 @@ public section.
   class-methods DISPLAY_CO
     importing
       !AUFNR type AUFNR .
+  class-methods DISPLAY_PLAN_ORDER
+    importing
+      !PLNUM type PLNUM .
   class-methods DISPLAY_IDOC
     importing
       !IV_DOCNUM type EDIDC-DOCNUM .
@@ -416,6 +508,7 @@ public section.
     importing
       value(IV_VBELN) type VBAK-VBELN
       !IT_POSNR type TT_POSNR optional
+      !IV_COMMIT type ABAP_BOOL default 'X'
     returning
       value(RT_RETURN) type BAPIRET2_T .
   class-methods CLOSE_SO
@@ -425,6 +518,14 @@ public section.
       value(IV_ABGRU) type VBAP-ABGRU
     returning
       value(RT_RETURN) type BAPIRET2_T .
+  class-methods ACC_DOCUMENT_REV_POST
+    importing
+      !IV_BUKRS type BKPF-BUKRS
+      !IV_BELNR type BKPF-BELNR
+      !IV_GJAHR type BKPF-GJAHR
+      !IV_STGRD type BKPF-STGRD default '01'
+    returning
+      value(RS_RETURN) type TY_ACC_DOC_RETURN .
   class-methods BAPIRETURN_GET1
     importing
       !TYPE type BAPIRETURN-TYPE
@@ -455,6 +556,12 @@ public section.
   class-methods BREAK
     importing
       !IV_PARAM type USR05-PARID default 'ESP' .
+  class-methods MIGO_CANCEL
+    importing
+      value(IM_MBLNR) type MBLNR
+      value(IM_MJAHR) type MJAHR
+    returning
+      value(RE_RET) type BAPIRET2 .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -486,7 +593,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 
   METHOD authority_check_tcode.
     AUTHORITY-CHECK OBJECT 'S_TCODE'
-           ID 'TCD' FIELD tcode.
+    ID 'TCD' FIELD tcode.
     IF sy-subrc NE 0.
       MESSAGE e172(00) WITH tcode.
     ENDIF.
@@ -513,23 +620,41 @@ CLASS ZCL_COMMON IMPLEMENTATION.
           OTHERS               = 9 ##FM_SUBRC_OK.
     ELSE.
       DATA(strtimmed) = COND abap_bool( WHEN start_date IS NOT INITIAL THEN abap_false ELSE abap_true ).
-      CALL FUNCTION 'JOB_CLOSE'
-        EXPORTING
-          jobname              = jobname
-          jobcount             = jobcount
-          strtimmed            = strtimmed
-          sdlstrtdt            = start_date
-          sdlstrttm            = start_time
-        EXCEPTIONS
-          cant_start_immediate = 1
-          invalid_startdate    = 2
-          jobname_missing      = 3
-          job_close_failed     = 4
-          job_nosteps          = 5
-          job_notex            = 6
-          lock_failed          = 7
-          invalid_target       = 8
-          OTHERS               = 9 ##FM_SUBRC_OK.
+      IF strtimmed = 'X'.
+        CALL FUNCTION 'JOB_CLOSE'
+          EXPORTING
+            jobname              = jobname
+            jobcount             = jobcount
+            strtimmed            = strtimmed
+          EXCEPTIONS
+            cant_start_immediate = 1
+            invalid_startdate    = 2
+            jobname_missing      = 3
+            job_close_failed     = 4
+            job_nosteps          = 5
+            job_notex            = 6
+            lock_failed          = 7
+            invalid_target       = 8
+            OTHERS               = 9 ##FM_SUBRC_OK.
+      ELSE.
+        CALL FUNCTION 'JOB_CLOSE'
+          EXPORTING
+            jobname              = jobname
+            jobcount             = jobcount
+            strtimmed            = strtimmed
+            sdlstrtdt            = start_date
+            sdlstrttm            = start_time
+          EXCEPTIONS
+            cant_start_immediate = 1
+            invalid_startdate    = 2
+            jobname_missing      = 3
+            job_close_failed     = 4
+            job_nosteps          = 5
+            job_notex            = 6
+            lock_failed          = 7
+            invalid_target       = 8
+            OTHERS               = 9 ##FM_SUBRC_OK.
+      ENDIF.
     ENDIF.
     rv_subrc = sy-subrc.
   ENDMETHOD.
@@ -1549,7 +1674,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
             et_table        = et_table ).
       CATCH  cx_root INTO oref."异常捕获
         text = oref->get_text( ).
-        MESSAGE text TYPE 'S'  DISPLAY LIKE 'E'.
+        MESSAGE text TYPE 'I'.
     ENDTRY.
   ENDMETHOD.
 
@@ -1575,7 +1700,9 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         CHANGING
           cs_data = lwa_ztcommon001.
       MODIFY ztcommon001 FROM lwa_ztcommon001.
-      COMMIT WORK AND WAIT.
+      IF iv_commit = abap_true.
+        COMMIT WORK AND WAIT.
+      ENDIF.
     ENDIF.
 
 *---------------
@@ -1628,7 +1755,9 @@ CLASS ZCL_COMMON IMPLEMENTATION.
           CHANGING
             cs_data = lwa_ztcommon001.
         MODIFY ztcommon001 FROM lwa_ztcommon001.
-        COMMIT WORK AND WAIT.
+        IF iv_commit = abap_true.
+          COMMIT WORK AND WAIT.
+        ENDIF.
       ENDIF.
     ENDIF.
 
@@ -1887,12 +2016,14 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 
 
   METHOD create_so_dn.
-    DATA: lv_due_date   TYPE bapidlvcreateheader-due_date,
-          ls_dn_items   TYPE bapidlvreftosalesorder,
-          lt_dn_items   TYPE TABLE OF bapidlvreftosalesorder,
-          ls_return     TYPE bapiret2,
-          lv_dn_number  TYPE bapishpdelivnumb-deliv_numb,
-          lv_ship_point TYPE bapidlvcreateheader-ship_point.
+    DATA: lv_due_date      TYPE bapidlvcreateheader-due_date,
+          ls_dn_items      TYPE bapidlvreftosalesorder,
+          lt_dn_items      TYPE TABLE OF bapidlvreftosalesorder,
+          lt_deliveries    TYPE TABLE OF bapishpdelivnumb,
+          lt_created_items TYPE TABLE OF bapidlvitemcreated,
+          ls_return        TYPE bapiret2,
+          lv_dn_number     TYPE bapishpdelivnumb-deliv_numb,
+          lv_ship_point    TYPE bapidlvcreateheader-ship_point.
 
     CLEAR: ls_return,ls_dn_items,lt_dn_items[].
     DO 10 TIMES.
@@ -1942,24 +2073,49 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         delivery          = rs_return-vbeln
       TABLES
         sales_order_items = lt_dn_items
+        deliveries        = lt_deliveries
+        created_items     = lt_created_items
         return            = rs_return-return.
 
     LOOP AT rs_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
       EXIT.
     ENDLOOP.
     IF sy-subrc <> 0 AND rs_return-vbeln IS NOT INITIAL.
-      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
-        EXPORTING
-          wait = 'X'.
-      "查底表，确认更新完毕
-      DO 600 TIMES.
-        SELECT SINGLE @abap_true FROM likp INTO @DATA(lv_exists) WHERE vbeln = @rs_return-vbeln.
-        IF sy-subrc = 0.
+      IF lines( lt_deliveries ) > 1.
+        ls_return = bapireturn_get2( type = 'E' cl = '00' number = '001' par1 = TEXT-t11  ).
+        APPEND ls_return TO rs_return-return.
+      ENDIF.
+      IF lines( lt_created_items ) <> lines( lt_dn_items ).
+        ls_return = bapireturn_get2( type = 'E' cl = '00' number = '001' par1 = TEXT-t09  ).
+        APPEND ls_return TO rs_return-return.
+      ENDIF.
+      LOOP AT lt_dn_items INTO ls_dn_items.
+        READ TABLE lt_created_items INTO DATA(ls_created_items) WITH KEY ref_doc = ls_dn_items-ref_doc
+                                                                         ref_item = ls_dn_items-ref_item.
+
+        IF sy-subrc <> 0 OR ls_dn_items-dlv_qty <> ls_created_items-dlv_qty.
+          ls_return = bapireturn_get2( type = 'E' cl = '00' number = '001' par1 = TEXT-t10  ).
+          APPEND ls_return TO rs_return-return.
           EXIT.
-        ELSE.
-          WAIT UP TO 1 SECONDS.
         ENDIF.
-      ENDDO.
+      ENDLOOP.
+      IF NOT line_exists( rs_return-return[ type = 'E' ] ).
+        CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+          EXPORTING
+            wait = 'X'.
+        "查底表，确认更新完毕
+        DO 600 TIMES.
+          SELECT SINGLE @abap_true FROM likp INTO @DATA(lv_exists) WHERE vbeln = @rs_return-vbeln.
+          IF sy-subrc = 0.
+            EXIT.
+          ELSE.
+            WAIT UP TO 1 SECONDS.
+          ENDIF.
+        ENDDO.
+      ELSE.
+        CLEAR rs_return-vbeln.
+        CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+      ENDIF.
     ELSE.
       CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
     ENDIF.
@@ -2180,7 +2336,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
   METHOD delete_dn.
     DATA: ls_return         TYPE bapiret2,
           ls_header_data    TYPE bapiobdlvhdrcon,
-          ls_header_control TYPE bapiobdlvhdrctrlcon,
+          ls_header_control TYPE bapiobdlvhdrctrlchg,
 *          lt_header_deadlines TYPE STANDARD TABLE OF bapidlvdeadln,
 *          lt_item_data        TYPE STANDARD TABLE OF bapiobdlvitemcon,
 *          ls_item_data        TYPE bapiobdlvitemcon,
@@ -2204,11 +2360,11 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       RETURN.
     ENDIF.
     "项目不能删除
-    IF ls_likp-wbstk IS NOT INITIAL.
-      ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '111' ).
-      APPEND ls_return TO rt_return.
-      RETURN.
-    ENDIF.
+*    IF ls_likp-wbstk IS NOT INITIAL.
+*      ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '111' ).
+*      APPEND ls_return TO rt_return.
+*      RETURN.
+*    ENDIF.
 
     SELECT vbeln,posnr FROM lips INTO TABLE @DATA(lt_lips) WHERE vbeln = @iv_vbeln.
     LOOP AT lt_lips INTO DATA(ls_lips).
@@ -2284,12 +2440,14 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     LOOP AT rt_return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
       EXIT.
     ENDLOOP.
-    IF sy-subrc <> 0.
-      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
-        EXPORTING
-          wait = 'X'.
-    ELSE.
-      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    IF iv_commit = abap_true.
+      IF sy-subrc <> 0.
+        CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+          EXPORTING
+            wait = 'X'.
+      ELSE.
+        CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+      ENDIF.
     ENDIF.
   ENDMETHOD.
 
@@ -2312,12 +2470,14 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     "交货单不存在
     IF ls_likp IS INITIAL.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '002' par1 = CONV #( iv_vbeln ) ).
+      rs_return-message = ls_return-message.
       APPEND ls_return TO rs_return-return.
       RETURN.
     ENDIF.
     "交货未过账
     IF ls_likp-wbstk NA 'BC'.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '001' par1 = CONV #( TEXT-t02 ) ).
+      rs_return-message = ls_return-message.
       APPEND ls_return TO rs_return-return.
       RETURN.
     ENDIF.
@@ -2346,6 +2506,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     IF sy-subrc <> 0.
       lv_error = abap_true.
       ls_return = bapireturn_get2( type = 'E' cl = 'VL' number = '001' par1 = CONV #( TEXT-t03 ) ).
+      rs_return-message = ls_return-message.
       APPEND ls_return TO rs_return-return.
     ENDIF.
     rs_return-return = CORRESPONDING #( BASE ( rs_return-return  )
@@ -2356,8 +2517,10 @@ CLASS ZCL_COMMON IMPLEMENTATION.
                                                         message_v2 = msgv2
                                                         message_v3 = msgv3
                                                         message_v4 = msgv4 ).
-    LOOP AT rs_return-return TRANSPORTING NO FIELDS WHERE type CA 'AEX'.
-      EXIT.
+    LOOP AT rs_return-return INTO ls_return WHERE type CA 'AEX'.
+      rs_return-message =
+        COND #( WHEN rs_return-message = space THEN ls_return-message
+                ELSE |{ rs_return-message }/{ ls_return-message }| ).
     ENDLOOP.
     IF sy-subrc <> 0.
       CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
@@ -2692,12 +2855,17 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 
 
   METHOD split_file.
-    CALL FUNCTION 'STPU1_EXTRACT_FILENAME'
+    CALL FUNCTION 'SO_SPLIT_FILE_AND_PATH'
       EXPORTING
-        file_and_path = iv_filename
+        full_name     = iv_filename
       IMPORTING
-        file          = rs_return-filename
-        pathname      = rs_return-pathname.
+        stripped_name = rs_return-filename
+        file_path     = rs_return-pathname.
+    IF rs_return-filename IS INITIAL.
+      rs_return-filename = rs_return-pathname.
+      CLEAR rs_return-pathname.
+    ENDIF.
+
     SPLIT rs_return-filename AT '.' INTO TABLE DATA(lt_tab).
     IF sy-subrc = 0.
       DATA(lines) = lines( lt_tab ).
@@ -2827,6 +2995,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 
 
   METHOD create_url.
+    CHECK data_tab[] IS NOT INITIAL.
     CALL FUNCTION 'DP_CREATE_URL'
       EXPORTING
         type                 = 'IMAGE'                "#EC NOTEXT
@@ -2981,7 +3150,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
   METHOD add_audit.
     FIELD-SYMBOLS:<fs> TYPE any.
     ASSIGN COMPONENT 'ERNAM' OF STRUCTURE cs_data TO <fs>.
-    IF sy-subrc = 0 AND <fs> IS INITIAL.
+    IF sy-subrc = 0 AND <fs> IS INITIAL AND iv_updateflag NA 'UMD'.
       <fs> = sy-uname.
       ASSIGN COMPONENT 'ERDAT' OF STRUCTURE cs_data TO <fs>.
       IF sy-subrc = 0.
@@ -3129,5 +3298,439 @@ CLASS ZCL_COMMON IMPLEMENTATION.
                                                     IMPORTING ev_date      = ev_date
                                                               ev_time      = ev_time
                                                               ev_msec      = ev_msec ).
+  ENDMETHOD.
+
+
+  METHOD acc_document_rev_post.
+    DATA: lv_lgo_sys    TYPE tbdls-logsys.
+    DATA: ls_reversal TYPE bapiacrev,
+          lv_bus_act  TYPE bapiache09-bus_act,
+          lv_obj_key  TYPE bapiacrev-obj_key,
+          lt_return   TYPE STANDARD TABLE OF bapiret2.
+    "Get logical system
+    CALL FUNCTION 'OWN_LOGICAL_SYSTEM_GET'
+      IMPORTING
+        own_logical_system             = lv_lgo_sys
+      EXCEPTIONS
+        own_logical_system_not_defined = 1
+        OTHERS                         = 2.
+
+    SELECT SINGLE
+      awtyp,
+      awkey,
+      budat,
+      monat,
+      glvor
+      INTO @DATA(ls_bkpf)
+      FROM bkpf
+      WHERE bukrs = @iv_bukrs
+      AND   belnr = @iv_belnr
+      AND   gjahr = @iv_gjahr.
+
+
+    ls_reversal = VALUE #(
+      obj_type   = ls_bkpf-awtyp
+      obj_key    = ls_bkpf-awkey
+      obj_sys    = lv_lgo_sys
+      obj_key_r  = ls_bkpf-awkey
+      pstng_date = ls_bkpf-budat
+      "FIS_PERIOD = LS_BKPF-MONAT
+      comp_code  = iv_bukrs
+      "AC_DOC_NO  = LS_OUT-BELNR
+      reason_rev = iv_stgrd ).
+
+    lv_bus_act = ls_bkpf-glvor.
+
+    CALL FUNCTION 'BAPI_ACC_DOCUMENT_REV_CHECK'
+      EXPORTING
+        reversal = ls_reversal
+        bus_act  = lv_bus_act
+      TABLES
+        return   = rs_return-return.
+
+    LOOP AT lt_return INTO DATA(ls_return) WHERE type CA 'AEX'.
+      rs_return-message =
+        COND #( WHEN rs_return-message = space THEN ls_return-message
+                ELSE |{ rs_return-message }/{ ls_return-message }| ).
+    ENDLOOP.
+
+    IF rs_return-message IS NOT INITIAL.
+      RETURN.
+    ENDIF.
+
+    CALL FUNCTION 'BAPI_ACC_DOCUMENT_REV_POST'
+      EXPORTING
+        reversal = ls_reversal
+        bus_act  = lv_bus_act
+      IMPORTING
+*       OBJ_TYPE =
+        obj_key  = lv_obj_key
+*       OBJ_SYS  =
+      TABLES
+        return   = rs_return-return.
+
+    LOOP AT lt_return INTO ls_return WHERE type CA 'AEX'.
+      rs_return-message =
+        COND #( WHEN rs_return-message = space THEN ls_return-message
+                ELSE |{ rs_return-message }/{ ls_return-message }| ).
+    ENDLOOP.
+
+    IF sy-subrc NE 0.
+      rs_return-belnr = lv_obj_key(10).
+      rs_return-bukrs = lv_obj_key+10(4).
+      rs_return-gjahr = lv_obj_key+14(4).
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD confirm.
+    "rv_answer = 1 ok
+    IF iv_question IS INITIAL.
+      iv_question = TEXT-t06.
+    ENDIF.
+    CALL FUNCTION 'POPUP_TO_CONFIRM'
+      EXPORTING
+        titlebar              = TEXT-t05
+        text_question         = iv_question
+        text_button_1         = TEXT-t07
+        text_button_2         = TEXT-t08
+        icon_button_1         = 'ICON_OKAY'
+        icon_button_2         = 'ICON_CANCEL'
+        default_button        = '2'
+        display_cancel_button = ''
+      IMPORTING
+        answer                = rv_answer
+      EXCEPTIONS
+        text_not_found        = 1.
+  ENDMETHOD.
+
+
+  METHOD string_to_xstring.
+    CALL FUNCTION 'SCMS_STRING_TO_XSTRING'
+      EXPORTING
+        text   = iv_string
+*       MIMETYPE       = ' '
+*       ENCODING       =
+      IMPORTING
+        buffer = rv_xstring
+      EXCEPTIONS
+        failed = 1
+        OTHERS = 2.
+    IF sy-subrc <> 0.
+* Implement suitable error handling here
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD read_text.
+    DATA lt_line TYPE STANDARD TABLE OF tline.
+    IF NOT language IS SUPPLIED.
+      language = sy-langu.
+    ENDIF.
+    CALL FUNCTION 'READ_TEXT'
+      EXPORTING
+        id                      = id
+        language                = language
+        name                    = name
+        object                  = object
+*       ARCHIVE_HANDLE          = 0
+*       LOCAL_CAT               = SPACE
+*       USE_OLD_PERSISTENCE     = ABAP_FALSE
+*       IMPORTING
+*       HEADER                  =
+*       OLD_LINE_COUNTER        =
+      TABLES
+        lines                   = lt_line
+      EXCEPTIONS
+        id                      = 1
+        language                = 2
+        name                    = 3
+        not_found               = 4
+        object                  = 5
+        reference_check         = 6
+        wrong_access_to_archive = 7
+        OTHERS                  = 8.
+    IF sy-subrc <> 0.
+*      MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*        WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+    ELSE.
+      LOOP AT lt_line INTO DATA(ls_line).
+        rv_text = |{ rv_text }{ ls_line-tdline }|.
+      ENDLOOP.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD migo_cancel.
+
+    DATA lt_return TYPE TABLE OF bapiret2.
+
+    CALL FUNCTION 'BAPI_GOODSMVT_CANCEL'
+      EXPORTING
+        materialdocument    = im_mblnr    "物料凭证
+        matdocumentyear     = im_mjahr    "年
+        goodsmvt_pstng_date = sy-datum
+        goodsmvt_pr_uname   = sy-uname
+      TABLES
+        return              = lt_return.
+
+    LOOP AT lt_return INTO DATA(ls_return) WHERE type CA 'AEX'.
+      re_ret-message = COND #( WHEN re_ret-message IS INITIAL THEN ls_return-message ELSE re_ret-message && ls_return-message ).
+    ENDLOOP.
+    IF sy-subrc EQ 0.
+      re_ret-type = 'E'.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ELSE.
+      re_ret-type = 'S '.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+    ENDIF.
+
+  ENDMETHOD.
+
+
+  METHOD has_emoji.
+    DATA lv_string TYPE string.
+    DATA: im_utf16_s_pair TYPE xstring,
+          ex_utf32        TYPE xstring,
+          temiv_str       TYPE string,
+          temp_xstring    TYPE xstring.
+    DATA(d800) = CONV char1( cl_abap_conv_in_ce=>uccp( 'D800' ) ).
+    DATA(dbff) = CONV char1( cl_abap_conv_in_ce=>uccp( 'DBFF' ) ).
+    DATA(dc00) = CONV char1( cl_abap_conv_in_ce=>uccp( 'DC00' ) ).
+    DATA(dfff) = CONV char1( cl_abap_conv_in_ce=>uccp( 'DFFF' ) ).
+
+    DATA(offset) = 0.
+    lv_string = ``.
+    rv_value = abap_false.
+    WHILE offset < strlen( iv_str ).
+      IF iv_str+offset(1) NOT BETWEEN d800 AND dbff.
+        lv_string = lv_string && escape( val = iv_str+offset(1) format = cl_abap_format=>e_html_text ).
+      ELSE.
+        temiv_str = iv_str+offset(1).
+        ADD 1 TO offset.
+        IF offset >= strlen( iv_str ) OR iv_str+offset(1) NOT BETWEEN dc00 AND dfff.
+          lv_string = lv_string && 'ERR!'.
+        ELSE.
+          temiv_str = temiv_str && iv_str+offset(1).
+          EXPORT dummyname = temiv_str TO DATA BUFFER temp_xstring.
+          IMPORT dummyname = im_utf16_s_pair FROM DATA BUFFER temp_xstring IN CHAR-TO-HEX MODE.
+          cl_scp_mapping_rules=>utf16_s_pair_to_utf32(
+            EXPORTING
+              im_utf16_s_pair = im_utf16_s_pair
+              im_endian       = cl_abap_char_utilities=>endian
+            IMPORTING
+              ex_utf32        = ex_utf32 ).
+          IF cl_abap_char_utilities=>endian = 'L'.
+            CONCATENATE ex_utf32+3(1) ex_utf32+2(1) ex_utf32+1(1) ex_utf32+0(1) INTO ex_utf32 IN BYTE MODE.
+          ENDIF.
+          temiv_str = shift_left( val = |{ ex_utf32 }| sub = '0' ). " remove leading zeroes
+          lv_string = lv_string && |&#x{ temiv_str };|.
+          rv_value = abap_true.
+          RETURN.
+        ENDIF.
+      ENDIF.
+      offset = offset + 1.
+    ENDWHILE.
+  ENDMETHOD.
+
+
+  METHOD display_plan_order.
+    SET PARAMETER ID 'PAF' FIELD  plnum.
+    authority_check_tcode( 'MD13' ).
+    CALL TRANSACTION 'MD13' AND SKIP FIRST SCREEN.
+  ENDMETHOD.
+
+
+  METHOD binary_to_string.
+    CALL FUNCTION 'SCMS_BINARY_TO_STRING'
+      EXPORTING
+        input_length  = iv_filelength
+      IMPORTING
+        output_length = rs_return-output_length
+        text_buffer   = rs_return-text_buffer
+      TABLES
+        binary_tab    = data_tab
+      EXCEPTIONS
+        failed        = 1
+        OTHERS        = 2.
+  ENDMETHOD.
+
+
+  METHOD authority_check_werks_range.
+    rv_subrc = 0.
+    SELECT werks INTO TABLE @DATA(lt_t001w) FROM t001w WHERE werks IN @ir_werks.
+    IF sy-subrc = 0.
+      LOOP AT lt_t001w INTO DATA(ls_t001w).
+        AUTHORITY-CHECK OBJECT iv_auth_obj
+          ID 'WERKS' FIELD ls_t001w-werks.
+        IF sy-subrc <> 0.
+          rv_subrc = 1.
+          MESSAGE s013(/sapsll/pluginr3) WITH ls_t001w-werks DISPLAY LIKE 'E'.
+          EXIT.
+        ENDIF.
+      ENDLOOP.
+    ELSE.
+      MESSAGE s710(12) WITH '' DISPLAY LIKE 'E'.
+      rv_subrc = 4.
+    ENDIF.
+    IF rv_subrc <> 0.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD authority_check_werks.
+    rv_subrc = 0.
+    SELECT SINGLE mandt INTO @sy-mandt FROM t001w WHERE werks = @iv_werks.
+    IF sy-subrc = 0.
+      AUTHORITY-CHECK OBJECT iv_auth_obj
+*        ID 'ACTVT' FIELD '03'
+        ID 'WERKS' FIELD iv_werks.
+      IF sy-subrc <> 0.
+        rv_subrc = 1.
+        MESSAGE s013(/sapsll/pluginr3) WITH iv_werks DISPLAY LIKE 'E'.
+      ENDIF.
+    ELSE.
+      MESSAGE s710(12) WITH iv_werks DISPLAY LIKE 'E'.
+      rv_subrc = 4.
+    ENDIF.
+    IF rv_subrc <> 0.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD authority_check_vkorg_range.
+    rv_subrc = 0.
+    SELECT vkorg INTO TABLE @DATA(lt_tvko) FROM tvko WHERE vkorg IN @ir_vkorg.
+    IF sy-subrc = 0.
+      LOOP AT lt_tvko INTO DATA(ls_tvko).
+        AUTHORITY-CHECK OBJECT 'V_KNA1_VKO'
+       ID 'VKORG' FIELD ls_tvko-vkorg.
+        IF sy-subrc <> 0.
+          rv_subrc = 1.
+          MESSAGE s430(velo) WITH ls_tvko-vkorg DISPLAY LIKE 'E'.
+          EXIT.
+        ENDIF.
+      ENDLOOP.
+    ELSE.
+      MESSAGE s118(m3) WITH '' DISPLAY LIKE 'E'.
+      rv_subrc = 4.
+    ENDIF.
+    IF rv_subrc <> 0.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD authority_check_vkorg.
+    rv_subrc = 0.
+    SELECT SINGLE mandt INTO @sy-mandt FROM tvko WHERE vkorg = @iv_vkorg.
+    IF sy-subrc = 0.
+      AUTHORITY-CHECK OBJECT 'V_KNA1_VKO'
+        ID 'VKORG' FIELD iv_vkorg.
+      IF sy-subrc <> 0.
+        rv_subrc = 1.
+        MESSAGE s430(velo) WITH iv_vkorg DISPLAY LIKE 'E'.
+      ENDIF.
+    ELSE.
+      MESSAGE s118(m3) WITH iv_vkorg DISPLAY LIKE 'E'.
+      rv_subrc = 4.
+    ENDIF.
+    IF rv_subrc <> 0.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD authority_check_ekorg_range.
+    rv_subrc = 0.
+    SELECT ekorg INTO TABLE @DATA(lt_t024e) FROM t024e WHERE ekorg IN @ir_ekorg.
+    IF sy-subrc = 0.
+      LOOP AT lt_t024e INTO DATA(ls_t024e).
+        AUTHORITY-CHECK OBJECT 'M_LFM1_EKO'
+       ID 'EKORG' FIELD ls_t024e-ekorg.
+        IF sy-subrc <> 0.
+          rv_subrc = 1.
+          MESSAGE s691(mw) WITH ls_t024e-ekorg DISPLAY LIKE 'E'.
+          EXIT.
+        ENDIF.
+      ENDLOOP.
+    ELSE.
+      MESSAGE s039(6r) WITH '' DISPLAY LIKE 'E'.
+      rv_subrc = 4.
+    ENDIF.
+    IF rv_subrc <> 0.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD authority_check_ekorg.
+    rv_subrc = 0.
+    SELECT SINGLE mandt INTO @sy-mandt FROM t024e WHERE ekorg = @iv_ekorg.
+    IF sy-subrc = 0.
+      AUTHORITY-CHECK OBJECT 'M_LFM1_EKO'
+        ID 'EKORG' FIELD iv_ekorg.
+      IF sy-subrc <> 0.
+        rv_subrc = 1.
+        MESSAGE s691(mw) WITH iv_ekorg DISPLAY LIKE 'E'.
+      ENDIF.
+    ELSE.
+      MESSAGE s039(6r) WITH iv_ekorg DISPLAY LIKE 'E'.
+      rv_subrc = 4.
+    ENDIF.
+    IF rv_subrc <> 0.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD authority_check_bukrs_range.
+    rv_subrc = 0.
+    SELECT bukrs INTO TABLE @DATA(lt_t001) FROM t001 WHERE bukrs IN @ir_bukrs.
+    IF sy-subrc = 0.
+      LOOP AT lt_t001 INTO DATA(ls_t001).
+        AUTHORITY-CHECK OBJECT 'F_BKPF_BUK'
+        ID 'BUKRS' FIELD ls_t001-bukrs.
+        IF sy-subrc <> 0.
+          rv_subrc = 1.
+          MESSAGE s652(0d) WITH ls_t001-bukrs DISPLAY LIKE 'E'.
+          EXIT.
+        ENDIF.
+      ENDLOOP.
+    ELSE.
+      MESSAGE s360(6d) WITH '' DISPLAY LIKE 'E'.
+      rv_subrc = 4.
+    ENDIF.
+    IF rv_subrc <> 0.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD authority_check_bukrs.
+    rv_subrc = 0.
+    SELECT SINGLE mandt INTO @sy-mandt FROM t001 WHERE bukrs = @iv_bukrs.
+    IF sy-subrc = 0.
+      AUTHORITY-CHECK OBJECT 'F_BKPF_BUK'
+        ID 'BUKRS' FIELD iv_bukrs.
+      IF sy-subrc <> 0.
+        rv_subrc = 1.
+        MESSAGE s652(0d) WITH iv_bukrs DISPLAY LIKE 'E'.
+      ENDIF.
+    ELSE.
+      MESSAGE s360(6d) WITH iv_bukrs DISPLAY LIKE 'E'.
+      rv_subrc = 4.
+    ENDIF.
+    IF rv_subrc <> 0.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.

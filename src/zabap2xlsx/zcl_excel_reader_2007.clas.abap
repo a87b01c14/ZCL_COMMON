@@ -2512,7 +2512,7 @@ CLASS ZCL_EXCEL_READER_2007 IMPLEMENTATION.
       ENDIF.
       lv_cell_row = ls_row-r.
       lo_row = io_worksheet->get_row( lv_cell_row ).
-      IF ls_row-customheight = '1'.
+      IF ls_row-customheight = '1' AND ls_row-ht > 0.
         lo_row->set_row_height( ip_row_height = ls_row-ht ip_custom_height = abap_true ).
       ELSEIF ls_row-ht > 0.
         lo_row->set_row_height( ip_row_height = ls_row-ht ip_custom_height = abap_false ).

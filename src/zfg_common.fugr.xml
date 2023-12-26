@@ -272,6 +272,36 @@
      </DOCUMENTATION>
     </item>
     <item>
+     <FUNCNAME>ZFUN_DISPLAY_PICTURE_OBS</FUNCNAME>
+     <SHORT_TEXT>显示图片</SHORT_TEXT>
+     <IMPORT>
+      <RSIMP>
+       <PARAMETER>IV_FILENAME</PARAMETER>
+       <REFERENCE>X</REFERENCE>
+       <TYP>RLGRAP-FILENAME</TYP>
+      </RSIMP>
+      <RSIMP>
+       <PARAMETER>IO_PICTURE</PARAMETER>
+       <OPTIONAL>X</OPTIONAL>
+       <REFERENCE>X</REFERENCE>
+       <TYP>REF TO CL_GUI_PICTURE</TYP>
+       <REF_CLASS>X</REF_CLASS>
+      </RSIMP>
+     </IMPORT>
+     <DOCUMENTATION>
+      <RSFDO>
+       <PARAMETER>IV_FILENAME</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>用于装载/卸载的局部文件</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IO_PICTURE</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>Container for custom controls in the dynpro area</STEXT>
+      </RSFDO>
+     </DOCUMENTATION>
+    </item>
+    <item>
      <FUNCNAME>ZFUN_GET_DATE_REC</FUNCNAME>
      <SHORT_TEXT>ZSPUB_DATE_REC赋值</SHORT_TEXT>
      <IMPORT>
@@ -357,7 +387,7 @@
        <LINE>PROCESS AFTER INPUT.</LINE>
       </RPY_DYFLOW>
       <RPY_DYFLOW>
-       <LINE>  MODULE excel_exit AT EXIT-COMMAND.</LINE>
+       <LINE>  MODULE exit_command_0100 AT EXIT-COMMAND.</LINE>
       </RPY_DYFLOW>
       <RPY_DYFLOW>
        <LINE>  MODULE user_command_0100.</LINE>
