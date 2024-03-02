@@ -991,7 +991,12 @@ CLASS ZCL_EXCEL_READER_2007 IMPLEMENTATION.
             ENDIF.
 
             lv_current_offset = strlen( <ls_shared_string>-value ).
-            APPEND ls_rtf TO <ls_shared_string>-rtf.
+            "ADD BY HS-YUXS 20231229 BEGIN.
+            READ TABLE <ls_shared_string>-rtf TRANSPORTING NO FIELDS WITH TABLE KEY offset = ls_rtf-offset.
+            IF sy-subrc <> 0.
+              APPEND ls_rtf TO <ls_shared_string>-rtf.
+            ENDIF.
+            "ADD BY HS-YUXS 20231229 END.
 
             lo_node_si_child ?= lo_node_si_child->get_next( ).
 

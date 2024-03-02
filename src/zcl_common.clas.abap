@@ -89,6 +89,15 @@ public section.
       value(IV_QUESTION) type STRING optional
     returning
       value(RV_ANSWER) type CHAR1 .
+  class-methods SAVE_TEXT
+    importing
+      !ID type THEAD-TDID
+      value(LANGUAGE) type THEAD-TDSPRAS optional
+      !NAME type THEAD-TDNAME
+      !OBJECT type THEAD-TDOBJECT
+      value(TEXT) type STRING
+    returning
+      value(RV_SUBRC) type SY-SUBRC .
   class-methods READ_TEXT
     importing
       !ID type THEAD-TDID
@@ -123,6 +132,20 @@ public section.
     importing
       !IV_WERKS type WERKS_D
       !IV_AUTH_OBJ type CLIKE default 'M_MATE_WRK'
+    returning
+      value(RV_SUBRC) like SY-SUBRC .
+  class-methods AUTHORITY_CHECK_LGORT_RANGE
+    importing
+      !IR_WERKS type J_1GVL_RNG_WERKS_T
+      !IR_LGORT type JITO_LGORT_RANGE_TT
+      !IV_AUTH_OBJ type CLIKE default 'M_MSEG_LGO'
+    returning
+      value(RV_SUBRC) like SY-SUBRC .
+  class-methods AUTHORITY_CHECK_LGORT
+    importing
+      !IV_WERKS type WERKS_D
+      !IV_LGORT type LGORT_D
+      !IV_AUTH_OBJ type CLIKE default 'M_MSEG_LGO'
     returning
       value(RV_SUBRC) like SY-SUBRC .
   class-methods AUTHORITY_CHECK_VKORG_RANGE
@@ -562,6 +585,16 @@ public section.
       value(IM_MJAHR) type MJAHR
     returning
       value(RE_RET) type BAPIRET2 .
+  class-methods LOCK
+    importing
+      !IV_OBJ type ANY
+      !IV_SCOPE type SEQAREA-SCOPE default '1'
+      !IV_OUTPUT_MSG type ABAP_BOOL default ABAP_TRUE
+    returning
+      value(RV_SUBRC) like SY-SUBRC .
+  class-methods UNLOCK
+    importing
+      !IV_OBJ type ANY .
   PROTECTED SECTION.
   PRIVATE SECTION.
 ENDCLASS.
@@ -3727,6 +3760,157 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       ENDIF.
     ELSE.
       MESSAGE s360(6d) WITH iv_bukrs DISPLAY LIKE 'E'.
+      rv_subrc = 4.
+    ENDIF.
+    IF rv_subrc <> 0.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD save_text.
+    DATA ls_thead TYPE thead.
+    DATA: lt_line TYPE STANDARD TABLE OF tline,
+          ls_line TYPE tline,
+          lv_len  TYPE i.
+    CHECK text IS NOT INITIAL.
+    IF NOT language IS SUPPLIED.
+      language = sy-langu.
+    ENDIF.
+    ls_thead-tdobject = object.
+    ls_thead-tdname = name.
+    ls_thead-tdid = id. "text id
+    ls_thead-tdspras = language.
+    ls_line-tdformat = '* '.
+
+    WHILE text IS NOT INITIAL.
+      lv_len = strlen( text ).
+      IF lv_len > 132.
+        ls_line-tdline = text(132).
+        APPEND ls_line TO lt_line.
+        text = text+132(*).
+      ELSE.
+        ls_line-tdline = text.
+        APPEND ls_line TO lt_line.
+        CLEAR text.
+      ENDIF.
+
+    ENDWHILE.
+
+
+    CALL FUNCTION 'SAVE_TEXT'
+      EXPORTING
+        client          = sy-mandt
+        header          = ls_thead
+        savemode_direct = 'X'
+      TABLES
+        lines           = lt_line
+      EXCEPTIONS
+        id              = 1
+        language        = 2
+        name            = 3
+        object          = 4
+        OTHERS          = 5.
+    rv_subrc = sy-subrc.
+  ENDMETHOD.
+
+
+  METHOD lock.
+    DATA: lv_msg LIKE sy-msgv1.
+    DATA: lv_objkey TYPE ecmobjextkey.
+    lv_objkey = iv_obj.
+    CALL FUNCTION 'ENQUEUE_ECOM_OBJ_LOCK'
+      EXPORTING
+        mode_com_obj_lock = 'E'
+        mandt             = sy-mandt
+        objextnr          = lv_objkey
+*       X_OBJEXTNR        = SPACE
+        _scope            = iv_scope
+*       _WAIT             = SPACE
+*       _COLLECT          = ' '
+      EXCEPTIONS
+        foreign_lock      = 1
+        system_failure    = 2
+        OTHERS            = 3.
+    IF sy-subrc <> 0.
+*   MESSAGE ID SY-MSGID TYPE SY-MSGTY NUMBER SY-MSGNO
+*     WITH SY-MSGV1 SY-MSGV2 SY-MSGV3 SY-MSGV4.
+    ENDIF.
+    rv_subrc = sy-subrc.
+    IF iv_output_msg = abap_true.
+      CASE sy-subrc.
+        WHEN 1.
+          lv_msg = sy-msgv1.
+          MESSAGE s022(z001) WITH iv_obj lv_msg DISPLAY LIKE 'E'.
+*    WHEN 3.
+*      MESSAGE A043(V1).
+        WHEN 2 OR 3.
+          MESSAGE ID sy-msgid TYPE sy-msgty NUMBER sy-msgno
+                  WITH sy-msgv1 sy-msgv2 sy-msgv3 sy-msgv4.
+      ENDCASE.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD unlock.
+    DATA lv_objkey TYPE ecmobjextkey.
+    lv_objkey = iv_obj.
+    CALL FUNCTION 'DEQUEUE_ECOM_OBJ_LOCK'
+      EXPORTING
+        mode_com_obj_lock = 'E'
+        mandt             = sy-mandt
+        objextnr          = lv_objkey
+*       X_OBJEXTNR        = SPACE
+*       _SCOPE            = '3'
+*       _SYNCHRON         = SPACE
+*       _COLLECT          = ' '
+      .
+  ENDMETHOD.
+
+
+  METHOD authority_check_lgort.
+    rv_subrc = 0.
+    SELECT SINGLE mandt INTO @sy-mandt FROM t001l WHERE werks = @iv_werks AND lgort = @iv_lgort.
+    IF sy-subrc = 0.
+      AUTHORITY-CHECK OBJECT iv_auth_obj
+*        ID 'ACTVT' FIELD '03'
+        ID 'WERKS' FIELD iv_werks
+        ID 'LGORT' FIELD iv_lgort.
+      IF sy-subrc <> 0.
+        rv_subrc = 1.
+        MESSAGE s055(migo) WITH iv_werks iv_lgort DISPLAY LIKE 'E'.
+      ENDIF.
+    ELSE.
+      MESSAGE s033(cm_ehfnd_loc_mig) WITH iv_lgort iv_werks DISPLAY LIKE 'E'.
+      rv_subrc = 4.
+    ENDIF.
+    IF rv_subrc <> 0.
+      LEAVE LIST-PROCESSING.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD authority_check_lgort_range.
+    DATA: lv_werks TYPE werks_d,
+          lv_lgort TYPE lgort_d.
+    rv_subrc = 0.
+    SELECT werks,lgort INTO TABLE @DATA(lt_t001l) FROM t001l WHERE werks IN @ir_werks AND lgort IN @ir_lgort.
+    IF sy-subrc = 0.
+      LOOP AT lt_t001l INTO DATA(ls_t001l).
+        AUTHORITY-CHECK OBJECT iv_auth_obj
+*        ID 'ACTVT' FIELD '03'
+          ID 'WERKS' FIELD ls_t001l-werks
+          ID 'LGORT' FIELD ls_t001l-lgort.
+        IF sy-subrc <> 0.
+          rv_subrc = 1.
+          MESSAGE s055(migo) WITH ls_t001l-werks ls_t001l-lgort DISPLAY LIKE 'E'.
+          EXIT.
+        ENDIF.
+      ENDLOOP.
+    ELSE.
+      lv_werks = VALUE #( ir_werks[ 1 ]-low OPTIONAL ).
+      lv_lgort = VALUE #( ir_lgort[ 1 ]-low OPTIONAL ).
+      MESSAGE s033(cm_ehfnd_loc_mig) WITH lv_lgort lv_werks DISPLAY LIKE 'E'.
       rv_subrc = 4.
     ENDIF.
     IF rv_subrc <> 0.

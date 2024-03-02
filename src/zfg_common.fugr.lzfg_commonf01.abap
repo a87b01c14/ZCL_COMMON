@@ -277,8 +277,8 @@ MODULE user_command_0100 INPUT.
   CLEAR sy-ucomm.
   CASE ok_code1.
     WHEN 'BACK' OR 'EXIT' OR 'CANCEL'.
-      free_object go_picture_container.
       free_object go_picture.
+      free_object go_picture_container.
       LEAVE TO SCREEN 0.
 * Change the display mode
     WHEN 'NORMAL'.

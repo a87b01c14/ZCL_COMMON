@@ -22,6 +22,8 @@ ENDMODULE.
 MODULE exit_command_0100 INPUT.
   CASE sy-ucomm.
     WHEN 'BACK' OR 'CANCEL' OR 'EXIT'.
+      free_object go_picture.
+      free_object go_picture_container.
       LEAVE TO SCREEN 0.
   ENDCASE.
 ENDMODULE.
