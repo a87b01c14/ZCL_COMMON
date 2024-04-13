@@ -541,6 +541,11 @@ public section.
       value(IV_ABGRU) type VBAP-ABGRU
     returning
       value(RT_RETURN) type BAPIRET2_T .
+  class-methods DELETE_PO
+    importing
+      value(IV_EBELN) type EBELN
+    returning
+      value(RT_RETURN) type BAPIRET2_T .
   class-methods ACC_DOCUMENT_REV_POST
     importing
       !IV_BUKRS type BKPF-BUKRS
@@ -3916,5 +3921,63 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     IF rv_subrc <> 0.
       LEAVE LIST-PROCESSING.
     ENDIF.
+  ENDMETHOD.
+
+
+  METHOD delete_po.
+    DATA: ls_return  LIKE LINE OF rt_return,
+          ls_header  TYPE bapimepoheader,
+          ls_headerx TYPE bapimepoheaderx,
+          lt_item    TYPE TABLE OF bapimepoitem,
+          lt_itemx   TYPE TABLE OF bapimepoitemx.
+
+    SELECT SINGLE ebeln FROM ekko INTO @DATA(ls_ekko) WHERE ebeln = @iv_ebeln.
+    "采购订单不存在
+    IF ls_ekko IS INITIAL.
+      ls_return = bapireturn_get2( type = 'E' cl = 'FPDP_DOWN_PAYMENTS' number = '012' par1 = CONV #( iv_ebeln ) ).
+      APPEND ls_return TO rt_return.
+      RETURN.
+    ENDIF.
+
+    SELECT ebeln,ebelp FROM ekpo INTO TABLE @DATA(lt_ekpo) WHERE ebeln = @iv_ebeln.
+    LOOP AT lt_ekpo INTO DATA(ls_ekpo) .
+      APPEND INITIAL LINE TO lt_item ASSIGNING FIELD-SYMBOL(<fs_item>).
+      <fs_item>-po_item = ls_ekpo-ebelp.
+      <fs_item>-delete_ind = 'X'.
+
+      APPEND INITIAL LINE TO lt_itemx ASSIGNING FIELD-SYMBOL(<fs_itemx>).
+      <fs_itemx>-po_item = ls_ekpo-ebelp.
+      <fs_itemx>-po_itemx = 'X'.
+      <fs_itemx>-delete_ind = 'X'.
+    ENDLOOP.
+
+    ls_header-po_number = iv_ebeln.
+    ls_header-delete_ind = 'X'.
+
+    ls_headerx-po_number = iv_ebeln.
+    ls_headerx-delete_ind = 'X'.
+
+    CALL FUNCTION 'BAPI_PO_CHANGE'
+      EXPORTING
+        purchaseorder = iv_ebeln
+        poheader      = ls_header
+        poheaderx     = ls_headerx
+*       no_price_from_po = 'X'
+      TABLES
+        poitem        = lt_item
+        poitemx       = lt_itemx
+        return        = rt_return.
+
+    LOOP AT rt_return INTO ls_return WHERE type CA 'AEX'.
+      EXIT.
+    ENDLOOP.
+    IF sy-subrc EQ 0.
+      CALL FUNCTION 'BAPI_TRANSACTION_ROLLBACK'.
+    ELSE.
+      CALL FUNCTION 'BAPI_TRANSACTION_COMMIT'
+        EXPORTING
+          wait = 'X'.
+    ENDIF.
+
   ENDMETHOD.
 ENDCLASS.
