@@ -546,6 +546,20 @@ public section.
       value(IV_EBELN) type EBELN
     returning
       value(RT_RETURN) type BAPIRET2_T .
+  class-methods PRICING_SO
+    importing
+      value(IV_VKORG) type VKORG
+      value(IV_VTWEG) type VTWEG
+      value(IV_SPART) type SPART
+      value(IV_AUART) type AUART
+      value(IV_KUNNR) type KUNNR
+      value(IV_WERKS) type WERKS_D
+      value(IV_MATNR) type MATNR
+      value(IV_KWMENG) type KWMENG default 1
+      value(IV_LAND1) type LAND1 default 'CN'
+      value(IV_WAERS) type WAERS default 'CNY'
+    returning
+      value(RT_KOMV) type KOMV_T .
   class-methods ACC_DOCUMENT_REV_POST
     importing
       !IV_BUKRS type BKPF-BUKRS
@@ -601,7 +615,7 @@ public section.
     importing
       !IV_OBJ type ANY .
   PROTECTED SECTION.
-  PRIVATE SECTION.
+private section.
 ENDCLASS.
 
 
@@ -3979,5 +3993,68 @@ CLASS ZCL_COMMON IMPLEMENTATION.
           wait = 'X'.
     ENDIF.
 
+  ENDMETHOD.
+
+
+  METHOD pricing_so.
+    DATA: ls_komk TYPE komk,
+          ls_komp TYPE komp,
+          lt_komv TYPE STANDARD TABLE OF komv,
+          ls_knvv TYPE knvv.
+    DATA:
+      lv_kalvg TYPE tvak-kalvg.
+
+    "销售组织对应的公司代码
+    SELECT SINGLE bukrs INTO @ls_komk-bukrs FROM tvko WHERE vkorg =  @iv_vkorg.
+    "根据订单类型获取用于定价过程确定的凭证分类
+    SELECT SINGLE kalvg INTO @lv_kalvg FROM tvak WHERE auart = @iv_auart.
+    "根据客户和销售范围获取用于定价过程确定的客户分类/客户组/客户价格组
+    SELECT SINGLE * INTO @ls_knvv FROM knvv
+      WHERE kunnr = @iv_kunnr AND vkorg = @iv_vkorg AND vtweg = @iv_vtweg AND spart = @iv_spart.
+    "客户税收分类
+    SELECT SINGLE taxkd INTO @ls_komk-taxk1 FROM knvi
+      WHERE kunnr = @iv_kunnr AND aland = @iv_land1.
+    "物料税收分类
+    SELECT SINGLE taxm1 INTO @ls_komp-taxm1 FROM mlan
+      WHERE matnr = @iv_matnr AND aland = @iv_land1.
+    "获取定价过程
+    SELECT SINGLE kalsm INTO @ls_komk-kalsm FROM t683v
+      WHERE kalvg = @lv_kalvg AND kalks = @ls_knvv-kalks  AND vkorg = @iv_vkorg AND vtweg = @iv_vtweg AND spart = @iv_spart.
+
+    MOVE-CORRESPONDING ls_knvv TO ls_komk.
+*    ls_komk-kunnr  = iv_kunnr. "knvv-kunnr
+*    ls_komk-vkorg  = iv_vkorg. "knvv-vkorg
+*    ls_komk-vtweg  = iv_vtweg. "knvv-vtweg
+*    ls_komk-spart  = iv_spart. "knvv-spart
+*    ls_komk-konda  = ls_knvv-konda. "knvv-konda
+*    ls_komk-kdgrp  = ls_knvv-kdgrp. "knvv-kdgrp
+*    ls_komk-pltyp  = ls_knvv-pltyp. "knvv-pltyp
+    ls_komk-waerk  =  iv_waers.
+    ls_komk-kappl  = 'V'.
+    ls_komk-prsdt  = sy-datum.
+    ls_komk-aland = iv_land1.
+    ls_komk-land1 = iv_land1.
+*    ls_komk-auart = lv_auart."非必须
+    ls_komk-werks = iv_werks. "非必须
+    ls_komk-vkorgau  = ls_komk-vkorg."销售订单的销售机构，PI01会用到
+*    ls_komk-bukrs  =
+*    ls_komk-taxk1 = '1'."客户税分类，重要MWST/MWSI用到
+
+    ls_komp-kposn  = '000010'.
+    ls_komp-matnr  = iv_matnr."物料号
+    ls_komp-pmatn  = iv_matnr."定价参考物料，重要PR01用到
+    ls_komp-werks  = iv_werks."工厂
+    ls_komp-mgame  = iv_kwmeng."数量
+    ls_komp-prsfd  = 'X'."定价相关性,重要
+    ls_komp-evrwr  = 'X'."确定成本,重要VPRS用到
+*ls_komp-taxm1  = '1'."物料税分类，重要MWST/MWSI用到
+
+    CALL FUNCTION 'PRICING'
+      EXPORTING
+        calculation_type = 'B'
+        comm_head_i      = ls_komk
+        comm_item_i      = ls_komp
+      TABLES
+        tkomv            = rt_komv.
   ENDMETHOD.
 ENDCLASS.
