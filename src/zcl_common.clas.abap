@@ -472,6 +472,9 @@ public section.
   class-methods DISPLAY_PLAN_ORDER
     importing
       !PLNUM type PLNUM .
+  class-methods DISPLAY_RESB
+    importing
+      !IV_RSNUM type RSNUM .
   class-methods DISPLAY_IDOC
     importing
       !IV_DOCNUM type EDIDC-DOCNUM .
@@ -2206,7 +2209,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       RETURN.
     ENDIF.
 
-    SELECT ebeln,ebelp,menge,meins FROM ekpo INTO TABLE @DATA(lt_ekpo) WHERE ebeln = @iv_vbeln.
+    SELECT ebeln,ebelp,menge,meins FROM ekpo INTO TABLE @DATA(lt_ekpo) WHERE ebeln = @iv_vbeln AND loekz = ''.
 
     LOOP AT lt_ekpo INTO DATA(ls_ekpo).
       CLEAR ls_dn_items.
@@ -4056,5 +4059,12 @@ CLASS ZCL_COMMON IMPLEMENTATION.
         comm_item_i      = ls_komp
       TABLES
         tkomv            = rt_komv.
+  ENDMETHOD.
+
+
+  METHOD display_resb.
+    SET PARAMETER ID 'RES' FIELD  iv_rsnum.
+    authority_check_tcode( 'MB23' ).
+    CALL TRANSACTION 'MB23' AND SKIP FIRST SCREEN.
   ENDMETHOD.
 ENDCLASS.
