@@ -478,6 +478,10 @@ public section.
   class-methods DISPLAY_IDOC
     importing
       !IV_DOCNUM type EDIDC-DOCNUM .
+  class-methods DISPLAY_CHANGEDOCUMENT
+    importing
+      value(IT_OBJECTCLASS) type CDOBJECTCL_RANGE_TAB
+      value(IT_OBJECTID) type CDOBJECTV_RANGE_TAB .
   class-methods ADD_ROLE
     importing
       !IV_USERNAME type BAPIBNAME-BAPIBNAME
@@ -4066,5 +4070,79 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     SET PARAMETER ID 'RES' FIELD  iv_rsnum.
     authority_check_tcode( 'MB23' ).
     CALL TRANSACTION 'MB23' AND SKIP FIRST SCREEN.
+  ENDMETHOD.
+
+
+  METHOD display_changedocument.
+    DATA:
+      lt_cdredadd       TYPE TABLE OF cdredadd,
+      lt_cdred_str      TYPE cdred_str_tab,
+      lt_fields_no_disp TYPE cddisp_fields_tab,
+      wa_nodisp         LIKE LINE OF lt_fields_no_disp.
+
+    wa_nodisp-fieldname = 'FTEXT'.
+    APPEND wa_nodisp TO lt_fields_no_disp.
+
+    wa_nodisp-fieldname = 'SCRTEXT_S'.
+    APPEND wa_nodisp TO lt_fields_no_disp.
+
+    wa_nodisp-fieldname = 'SCRTEXT_M'.
+    APPEND wa_nodisp TO lt_fields_no_disp.
+
+    wa_nodisp-fieldname = 'TEXT_CASE'.
+    APPEND wa_nodisp TO lt_fields_no_disp.
+
+    wa_nodisp-fieldname = 'KEYGUID'.
+    APPEND wa_nodisp TO lt_fields_no_disp.
+
+    wa_nodisp-fieldname = 'EXT_KEYLEN'.
+    APPEND wa_nodisp TO lt_fields_no_disp.
+
+    wa_nodisp-fieldname = 'CHNGIND'.
+    APPEND wa_nodisp TO lt_fields_no_disp.
+
+    CALL FUNCTION 'CHANGEDOCUMENT_READ_ALL'
+      EXPORTING
+        i_date_of_change           = '19000101'
+        i_time_of_change           = '000000'
+        i_date_until               = sy-datum
+        i_time_until               = '235959'
+*       i_username                 = p_user
+        i_read_archive_is          = space
+        it_objectclass             = it_objectclass
+        it_objectid                = it_objectid
+      IMPORTING
+        et_cdredadd                = lt_cdredadd
+        et_cdred_str               = lt_cdred_str
+      EXCEPTIONS
+        missing_input_objectclass  = 0
+        missing_input_header       = 0
+        no_position_found          = 1
+        wrong_access_to_archive    = 0
+        time_zone_conversion_error = 0
+        read_too_many_entries      = 0
+        OTHERS                     = 2.
+    CASE sy-subrc.
+      WHEN 0.
+        SORT lt_cdredadd BY objectid udate utime changenr username.
+        CALL FUNCTION 'CHANGEDOCUMENT_DISPLAY'
+          EXPORTING
+            i_applicationid       = sy-repid
+            flg_autocondense      = 'X'
+            i_cb_program          = sy-repid
+*           i_callback_pf_status_set = lv_pf_status_set
+            i_objectclas          = '*'
+            it_cdred_str          = lt_cdred_str[]
+            it_fields_no_disp     = lt_fields_no_disp
+            it_cdredadd           = lt_cdredadd
+            i_no_sort             = abap_true  " keep sorting from modify_cd_output_table
+            i_screen_start_line   = 1
+            i_screen_start_column = 5
+            i_screen_end_line     = 30
+            i_screen_end_column   = 185.
+      WHEN 1.
+      WHEN 2.
+    ENDCASE.
+
   ENDMETHOD.
 ENDCLASS.
