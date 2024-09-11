@@ -597,6 +597,12 @@ public section.
       !PAR4 type SY-MSGV4 optional
     returning
       value(BAPIRETURN) type BAPIRET2 .
+  class-methods BAPIRETURN_MESSAGE
+    importing
+      !IT_RETURN type BAPIRET2_T
+    exporting
+      !EV_MSGTY type MSGTY
+      !EV_MSGTX type BAPI_MSG .
   class-methods BAPIRETURN_PROCESS
     importing
       !IT_RETURN type BAPIRET2_TT
@@ -621,6 +627,40 @@ public section.
   class-methods UNLOCK
     importing
       !IV_OBJ type ANY .
+  class-methods SET_MEMORY_DATA
+    importing
+      !ID type CHAR30
+      !DATA type DATA .
+  class-methods GET_MEMORY_DATA
+    importing
+      !ID type CHAR30
+      !AUTO_DEL type ABAP_BOOL default 'X'
+    exporting
+      !DATA type DATA .
+  class-methods FREE_MEMORY_DATA
+    importing
+      !ID type CHAR30 .
+  class-methods SET_SHARED_BUFFER
+    importing
+      !ID type CHAR30
+      !DATA type DATA .
+  class-methods GET_SHARED_BUFFER
+    importing
+      !ID type CHAR30
+      !AUTO_DEL type ABAP_BOOL default 'X'
+    exporting
+      !DATA type DATA .
+  class-methods DELETE_SHARED_BUFFER
+    importing
+      !ID type CHAR30 .
+  class-methods GET_EXCHANGE_RATE
+    importing
+      !IV_RATE_TYPE type BAPI1093_1-RATE_TYPE default 'M'
+      !IV_FROM_CURR type BAPI1093_1-FROM_CURR
+      !IV_TO_CURR type BAPI1093_1-TO_CURRNCY
+      !IV_DATE type BAPI1093_2-TRANS_DATE default SY-DATUM
+    returning
+      value(RV_RATE) type WKURS .
   PROTECTED SECTION.
 private section.
 ENDCLASS.
@@ -4143,6 +4183,86 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       WHEN 1.
       WHEN 2.
     ENDCASE.
+
+  ENDMETHOD.
+
+
+  METHOD set_shared_buffer.
+    EXPORT data = data TO SHARED BUFFER demo_indx_blob(aa) ID id.
+  ENDMETHOD.
+
+
+  METHOD set_memory_data.
+    EXPORT soure = data TO MEMORY ID id.
+  ENDMETHOD.
+
+
+  METHOD get_shared_buffer.
+    IMPORT data = data FROM SHARED BUFFER demo_indx_blob(aa) ID id.
+    IF auto_del = abap_true.
+      DELETE FROM SHARED BUFFER demo_indx_blob(aa) ID id.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_memory_data.
+    IMPORT soure = data FROM MEMORY ID id.
+    IF auto_del = abap_true.
+      FREE MEMORY ID id.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD get_exchange_rate.
+    DATA: ls_exch_rate TYPE bapi1093_0,
+          ls_return    TYPE bapiret1.
+
+    CHECK iv_from_curr IS NOT INITIAL AND iv_to_curr IS NOT INITIAL.
+
+    CALL FUNCTION 'BAPI_EXCHANGERATE_GETDETAIL'
+      EXPORTING
+        rate_type  = iv_rate_type
+        from_curr  = iv_from_curr
+        to_currncy = iv_to_curr
+        date       = iv_date
+      IMPORTING
+        exch_rate  = ls_exch_rate
+        return     = ls_return.
+
+    IF ls_return-type CA 'AEX'.
+      MESSAGE ID ls_return-id TYPE ls_return-type NUMBER ls_return-number
+      WITH ls_return-message_v1 ls_return-message_v2 ls_return-message_v3 ls_return-message_v4 .
+    ENDIF.
+
+    IF ls_exch_rate-exch_rate IS NOT INITIAL.
+      rv_rate = ls_exch_rate-exch_rate / ls_exch_rate-from_factor * ls_exch_rate-to_factor.
+      RETURN.
+    ENDIF.
+
+    "间接汇率
+    IF ls_exch_rate-exch_rate_v IS NOT INITIAL.
+      rv_rate = 1 / ( ls_exch_rate-exch_rate_v / ls_exch_rate-from_factor_v * ls_exch_rate-to_factor_v ).
+      RETURN.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD free_memory_data.
+    FREE MEMORY ID id.
+  ENDMETHOD.
+
+
+  METHOD delete_shared_buffer.
+    DELETE FROM SHARED BUFFER demo_indx_blob(aa) ID id.
+  ENDMETHOD.
+
+
+  METHOD bapireturn_message.
+    LOOP AT it_return INTO DATA(ls_return) WHERE type CA 'AEX'.
+      ev_msgtx = COND #( WHEN ev_msgtx IS INITIAL THEN ls_return-message ELSE |{ ev_msgtx };{ ls_return-message }| ) .
+    ENDLOOP.
+
+    ev_msgty = COND #( WHEN ev_msgtx IS INITIAL THEN 'S' ELSE 'E' ) .
 
   ENDMETHOD.
 ENDCLASS.
