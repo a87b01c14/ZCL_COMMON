@@ -239,7 +239,7 @@ ENDCLASS.
 
 
 
-CLASS zcl_excel_common IMPLEMENTATION.
+CLASS ZCL_EXCEL_COMMON IMPLEMENTATION.
 
 
   METHOD calculate_cell_distance.
@@ -863,6 +863,18 @@ CLASS zcl_excel_common IMPLEMENTATION.
     CHECK ip_value IS NOT INITIAL AND ip_value CN ' 0'.
 
     TRY.
+        IF strlen( ip_value ) = 8.
+          ep_value = ip_value.
+          CALL FUNCTION 'DATE_CHECK_PLAUSIBILITY'
+            EXPORTING
+              date                      = ep_value
+            EXCEPTIONS
+              plausibility_check_failed = 1
+              OTHERS                    = 2.
+          IF sy-subrc = 0.
+            RETURN.
+          ENDIF.
+        ENDIF.
         lv_date_int = ip_value.
         IF lv_date_int NOT BETWEEN 1 AND 2958465.
           zcx_excel=>raise_text( 'Unable to interpret date' ).
