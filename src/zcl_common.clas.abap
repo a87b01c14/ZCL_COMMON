@@ -562,6 +562,7 @@ public section.
       value(IV_KUNNR) type KUNNR
       value(IV_WERKS) type WERKS_D
       value(IV_MATNR) type MATNR
+      value(IV_PRSDT) type PRSDT default SY-DATUM
       value(IV_KWMENG) type KWMENG default 1
       value(IV_LAND1) type LAND1 default 'CN'
       value(IV_WAERS) type WAERS default 'CNY'
@@ -661,6 +662,12 @@ public section.
       !IV_DATE type BAPI1093_2-TRANS_DATE default SY-DATUM
     returning
       value(RV_RATE) type WKURS .
+  class-methods GET_FUNCTION_PARAM
+    importing
+      !IM_NAME type EU_LNAME
+    exporting
+      !EX_INTERFACE type RSFBINTFV
+      !EX_HEADER type HEADER_FB .
   PROTECTED SECTION.
 private section.
 ENDCLASS.
@@ -4058,12 +4065,50 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     "根据客户和销售范围获取用于定价过程确定的客户分类/客户组/客户价格组
     SELECT SINGLE * INTO @ls_knvv FROM knvv
       WHERE kunnr = @iv_kunnr AND vkorg = @iv_vkorg AND vtweg = @iv_vtweg AND spart = @iv_spart.
+    "获取合作伙伴
+    SELECT * INTO TABLE @DATA(lt_knvp) FROM knvp
+     WHERE kunnr = @iv_kunnr AND vkorg = @iv_vkorg AND vtweg = @iv_vtweg AND spart = @iv_spart.
+    LOOP AT lt_knvp INTO DATA(ls_knvp).
+      CASE ls_knvp-parvw.
+        WHEN 'AG'."售达方SP
+          ls_komk-kunnr = ls_knvp-kunn2.
+        WHEN 'RE'."收票方BP
+          ls_komk-kunre = ls_knvp-kunn2.
+        WHEN 'RG'."付款方PY
+          ls_komk-knrze = ls_knvp-kunn2.
+        WHEN 'WE'."送达方/收货方SH
+          ls_komk-kunwe = ls_knvp-kunn2.
+      ENDCASE.
+    ENDLOOP.
     "客户税收分类
     SELECT SINGLE taxkd INTO @ls_komk-taxk1 FROM knvi
       WHERE kunnr = @iv_kunnr AND aland = @iv_land1.
     "物料税收分类
     SELECT SINGLE taxm1 INTO @ls_komp-taxm1 FROM mlan
       WHERE matnr = @iv_matnr AND aland = @iv_land1.
+    "物料主数据
+    SELECT SINGLE
+           mtart,
+           matkl,
+           satnr,
+           attyp
+       INTO ( @ls_komp-mtart,
+              @ls_komp-matkl,
+              @ls_komp-satnr,
+              @ls_komp-attyp )
+       FROM mara
+       WHERE matnr = @iv_matnr.
+    "物料销售主数据
+    SELECT SINGLE
+           prodh,
+           kondm,
+           pmatn
+       INTO ( @ls_komp-prodh,
+              @ls_komp-kondm,
+              @ls_komp-pmatn )
+       FROM mvke
+       WHERE matnr = @iv_matnr AND
+             lvorm = ''.
     "获取定价过程
     SELECT SINGLE kalsm INTO @ls_komk-kalsm FROM t683v
       WHERE kalvg = @lv_kalvg AND kalks = @ls_knvv-kalks  AND vkorg = @iv_vkorg AND vtweg = @iv_vtweg AND spart = @iv_spart.
@@ -4078,7 +4123,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 *    ls_komk-pltyp  = ls_knvv-pltyp. "knvv-pltyp
     ls_komk-waerk  =  iv_waers.
     ls_komk-kappl  = 'V'.
-    ls_komk-prsdt  = sy-datum.
+    ls_komk-prsdt  = iv_prsdt.
     ls_komk-aland = iv_land1.
     ls_komk-land1 = iv_land1.
 *    ls_komk-auart = lv_auart."非必须
@@ -4089,12 +4134,30 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 
     ls_komp-kposn  = '000010'.
     ls_komp-matnr  = iv_matnr."物料号
-    ls_komp-pmatn  = iv_matnr."定价参考物料，重要PR01用到
+*    ls_komp-pmatn  = iv_matnr."定价参考物料，重要PR01用到
     ls_komp-werks  = iv_werks."工厂
     ls_komp-mgame  = iv_kwmeng."数量
     ls_komp-prsfd  = 'X'."定价相关性,重要
     ls_komp-evrwr  = 'X'."确定成本,重要VPRS用到
 *ls_komp-taxm1  = '1'."物料税分类，重要MWST/MWSI用到
+
+*  额外增强字段
+*    SELECT SINGLE zsybmd INTO @ls_komk-zsybmd FROM but000 WHERE partner = @ls_komk-kunnr.
+*    SELECT SINGLE
+*           zyear,
+*           zseason,
+*           zchannel,
+*           zmat_cate,
+*           zbrand,
+*           zcolor_code
+*       INTO ( @ls_komp-zyear,
+*              @ls_komp-zseason,
+*              @ls_komp-zchannel,
+*              @ls_komp-zmat_cate,
+*              @ls_komp-zbrand,
+*              @lv_zcolor_code )
+*       FROM mara
+*       WHERE matnr = @iv_matnr.
 
     CALL FUNCTION 'PRICING'
       EXPORTING
@@ -4264,5 +4327,11 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 
     ev_msgty = COND #( WHEN ev_msgtx IS INITIAL THEN 'S' ELSE 'E' ) .
 
+  ENDMETHOD.
+
+
+  METHOD get_function_param.
+    cl_fb_function_utility=>meth_get_header_fb( EXPORTING im_name = im_name IMPORTING ex_header = ex_header ).
+    cl_fb_function_utility=>meth_get_interface( EXPORTING im_name = im_name IMPORTING ex_interface = ex_interface ).
   ENDMETHOD.
 ENDCLASS.
