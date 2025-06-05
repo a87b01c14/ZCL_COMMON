@@ -4108,6 +4108,8 @@ CLASS ZCL_COMMON IMPLEMENTATION.
               @ls_komp-pmatn )
        FROM mvke
        WHERE matnr = @iv_matnr AND
+             vkorg =  @iv_vkorg AND
+             vtweg = @iv_vtweg AND
              lvorm = ''.
     "获取定价过程
     SELECT SINGLE kalsm INTO @ls_komk-kalsm FROM t683v
