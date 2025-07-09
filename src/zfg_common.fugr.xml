@@ -14,7 +14,6 @@
    <FUNCTIONS>
     <item>
      <FUNCNAME>CONVERSION_EXIT_ZUSER_INPUT</FUNCNAME>
-     <SHORT_TEXT>用户转换</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
        <PARAMETER>INPUT</PARAMETER>
@@ -38,7 +37,6 @@
     </item>
     <item>
      <FUNCNAME>CONVERSION_EXIT_ZUSER_OUTPUT</FUNCNAME>
-     <SHORT_TEXT>Conversion exit MMSGS, internal-&gt;external</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
        <PARAMETER>INPUT</PARAMETER>
@@ -55,18 +53,15 @@
       <RSFDO>
        <PARAMETER>INPUT</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>Any ABAP field</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>OUTPUT</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>External INPUT display, C field</STEXT>
       </RSFDO>
      </DOCUMENTATION>
     </item>
     <item>
      <FUNCNAME>ZBAPI_M_REVAL_CREATEPRICECHANG</FUNCNAME>
-     <SHORT_TEXT>MR21价格修改</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
        <PARAMETER>COMP_CODE</PARAMETER>
@@ -105,38 +100,31 @@
       <RSFDO>
        <PARAMETER>COMP_CODE</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>公司代码</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>PSTNG_DATE</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>凭证中的过账日期</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>ML_DOC_YEAR</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>物料分类帐凭证/价格变动: 库存年度</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>ML_DOC_NUM</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>物料明细帐凭证/价格更改凭证的编号</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>MATERIAL_PRICE_LIST</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>BAPI 价格更改: 输入, 物料和价格的清单</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>RETURN</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>返回参数</STEXT>
       </RSFDO>
      </DOCUMENTATION>
     </item>
     <item>
      <FUNCNAME>ZFM_SD_CALCULATE</FUNCNAME>
-     <SHORT_TEXT>例程中函数计算</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
        <PARAMETER>IV_P1</PARAMETER>
@@ -165,28 +153,23 @@
       <RSFDO>
        <PARAMETER>IV_P1</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>条件金额或百分比</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IV_P2</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>条件金额或百分比</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IV_OP</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>操作符</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>RV</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>条件金额或百分比</STEXT>
       </RSFDO>
      </DOCUMENTATION>
     </item>
     <item>
      <FUNCNAME>ZFUN_DISPLAY_EXCEL</FUNCNAME>
-     <SHORT_TEXT>打印EXCEL</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
        <PARAMETER>IV_XLSM</PARAMETER>
@@ -219,17 +202,14 @@
       <RSFDO>
        <PARAMETER>IV_XLSM</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>是否为XLSM格式</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IV_AUTOPRINT</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>是否自动打印</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IV_FILENAME</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>另存文件名</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IO_EXCEL</PARAMETER>
@@ -243,7 +223,6 @@
     </item>
     <item>
      <FUNCNAME>ZFUN_DISPLAY_PICTURE</FUNCNAME>
-     <SHORT_TEXT>显示图片</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
        <PARAMETER>IV_FILENAME</PARAMETER>
@@ -262,18 +241,15 @@
       <RSFDO>
        <PARAMETER>IV_FILENAME</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>用于装载/卸载的局部文件</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IO_PICTURE</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>Container for custom controls in the dynpro area</STEXT>
       </RSFDO>
      </DOCUMENTATION>
     </item>
     <item>
      <FUNCNAME>ZFUN_DISPLAY_PICTURE_OBS</FUNCNAME>
-     <SHORT_TEXT>显示图片</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
        <PARAMETER>IV_FILENAME</PARAMETER>
@@ -292,18 +268,15 @@
       <RSFDO>
        <PARAMETER>IV_FILENAME</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>用于装载/卸载的局部文件</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IO_PICTURE</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>Container for custom controls in the dynpro area</STEXT>
       </RSFDO>
      </DOCUMENTATION>
     </item>
     <item>
      <FUNCNAME>ZFUN_GET_DATE_REC</FUNCNAME>
-     <SHORT_TEXT>ZSPUB_DATE_REC赋值</SHORT_TEXT>
      <IMPORT>
       <RSIMP>
        <PARAMETER>IV_MODE</PARAMETER>
@@ -321,7 +294,6 @@
       <RSFDO>
        <PARAMETER>IV_MODE</PARAMETER>
        <KIND>P</KIND>
-       <STEXT>单字符标记</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>CS_DATA</PARAMETER>

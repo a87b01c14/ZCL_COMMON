@@ -668,6 +668,33 @@ public section.
     exporting
       !EX_INTERFACE type RSFBINTFV
       !EX_HEADER type HEADER_FB .
+  class-methods PUT_SIGN_IN_FRONT
+    importing
+      !IV_VALUE type ANY
+    returning
+      value(EV_VALUE) type STRING .
+  class-methods SPLIT_GROUP_SIMPLE
+    importing
+      !IV_SIZE type I default 100
+      !IV_KEEP_ORDER type ABAP_BOOL default ABAP_TRUE
+      !IT_KEYS type LVC_T_FNAM optional
+    changing
+      !CT_DATA type INDEX TABLE
+      !CT_COUNT type INDEX TABLE optional
+      !CR_DATA type ref to DATA
+    exceptions
+      KEYS_NOT_FOUND .
+  class-methods SPLIT_GROUP
+    importing
+      !IV_SIZE type I default 100
+      !IV_KEEP_ORDER type ABAP_BOOL default ABAP_TRUE
+      !IT_KEYS type LVC_T_FNAM optional
+    changing
+      !CT_DATA type INDEX TABLE
+      !CT_COUNT type INDEX TABLE optional
+      !CR_DATA type ref to DATA
+    exceptions
+      KEYS_NOT_FOUND .
   PROTECTED SECTION.
 private section.
 ENDCLASS.
@@ -4335,5 +4362,573 @@ CLASS ZCL_COMMON IMPLEMENTATION.
   METHOD get_function_param.
     cl_fb_function_utility=>meth_get_header_fb( EXPORTING im_name = im_name IMPORTING ex_header = ex_header ).
     cl_fb_function_utility=>meth_get_interface( EXPORTING im_name = im_name IMPORTING ex_interface = ex_interface ).
+  ENDMETHOD.
+
+
+  METHOD put_sign_in_front.
+    DATA: text1(1) TYPE c.
+    ev_value = iv_value.
+    SEARCH ev_value FOR '-'.
+    IF sy-subrc = 0 AND sy-fdpos <> 0.
+      SPLIT ev_value AT '-' INTO ev_value text1.
+      CONDENSE ev_value.
+      CONCATENATE '-' ev_value INTO ev_value.
+    ELSE.
+      CONDENSE ev_value.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD split_group.
+* RETURN STRUCTURE:
+*├── GROUP_ID GROUP_COUNT ITEMS
+*│                           ├── KEY1 KEY2 ... GROUP_COUNT  ITEMS
+*                                                              └── REF TO IT_DATA LINE
+*                                                              └── REF TO IT_DATA LINE
+*│                           ├── KEY1 KEY2 ... GROUP_COUNT  ITEMS
+*                                                              └── REF TO IT_DATA LINE
+*                                                              └── REF TO IT_DATA LINE
+*├── GROUP_ID GROUP_COUNT ITEMS
+*│                           ├── KEY1 KEY2 ... GROUP_COUNT  ITEMS
+*                                                              └── REF TO IT_DATA LINE
+*                                                              └── REF TO IT_DATA LINE
+*│                           ├── KEY1 KEY2 ... GROUP_COUNT  ITEMS
+*                                                              └── REF TO IT_DATA LINE
+*                                                              └── REF TO IT_DATA LINE
+    DATA: lo_tabledescr        TYPE REF TO cl_abap_tabledescr,
+          lo_structdescr       TYPE REF TO cl_abap_structdescr,
+          lo_typedescr         TYPE REF TO cl_abap_typedescr,
+          lo_datadescr         TYPE REF TO cl_abap_datadescr,
+          lo_refdescr          TYPE REF TO cl_abap_refdescr,
+          lt_keys              TYPE abap_table_keydescr_tab,
+          lt_keys_components   TYPE STANDARD TABLE OF abap_table_keycompdescr,
+          lo_tabletype         TYPE REF TO cl_abap_tabledescr,
+          lt_comp              TYPE cl_abap_structdescr=>component_table,
+          lt_new_comp          LIKE lt_comp,
+          lo_new_tabletype_sub TYPE REF TO cl_abap_tabledescr,
+          lt_new_comp_sub      LIKE lt_comp,
+          lt_comp_count        LIKE lt_comp,
+          lo_data              TYPE REF TO data.
+    FIELD-SYMBOLS: <wa_key_comp> LIKE LINE OF lt_keys_components.
+    FIELD-SYMBOLS: <wa_comp> LIKE LINE OF lt_comp.
+    FIELD-SYMBOLS: <new_table> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS: <new_line> TYPE any.
+    FIELD-SYMBOLS: <new_table_sub> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS: <new_line_sub> TYPE any.
+    FIELD-SYMBOLS: <table> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS: <line> TYPE any.
+
+    FIELD-SYMBOLS: <table_count> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS: <line_count> TYPE any.
+
+    FIELD-SYMBOLS: <wa_keys>           LIKE LINE OF lt_keys,
+                   <wa_key_components> TYPE abap_table_keycompdescr,
+                   <wa_line>           TYPE any,
+                   <wa_count>          TYPE any,
+                   <wa_count_tail>     TYPE any,
+                   <wa_value>          TYPE any,
+                   <wa_value1>         TYPE any,
+                   <wa_value2>         TYPE any,
+                   <wa_value3>         TYPE any,
+                   <wa_value4>         TYPE any,
+                   <wa_value5>         TYPE any,
+                   <wa_value6>         TYPE any,
+                   <wa_value7>         TYPE any,
+                   <wa_value8>         TYPE any,
+                   <wa_value9>         TYPE any,
+                   <wa_value10>        TYPE any,
+                   <wa_value11>        TYPE any,
+                   <wa_value12>        TYPE any,
+                   <wa_value13>        TYPE any,
+                   <wa_value14>        TYPE any,
+                   <wa_value15>        TYPE any,
+                   <wa_value16>        TYPE any,
+                   <wa_value17>        TYPE any,
+                   <wa_value18>        TYPE any,
+                   <wa_value19>        TYPE any,
+                   <wa_value20>        TYPE any
+                   .
+    DATA: lv_fname1  TYPE lvc_fname,
+          lv_fname2  TYPE lvc_fname,
+          lv_fname3  TYPE lvc_fname,
+          lv_fname4  TYPE lvc_fname,
+          lv_fname5  TYPE lvc_fname,
+          lv_fname6  TYPE lvc_fname,
+          lv_fname7  TYPE lvc_fname,
+          lv_fname8  TYPE lvc_fname,
+          lv_fname9  TYPE lvc_fname,
+          lv_fname10 TYPE lvc_fname,
+          lv_fname11 TYPE lvc_fname,
+          lv_fname12 TYPE lvc_fname,
+          lv_fname13 TYPE lvc_fname,
+          lv_fname14 TYPE lvc_fname,
+          lv_fname15 TYPE lvc_fname,
+          lv_fname16 TYPE lvc_fname,
+          lv_fname17 TYPE lvc_fname,
+          lv_fname18 TYPE lvc_fname,
+          lv_fname19 TYPE lvc_fname,
+          lv_fname20 TYPE lvc_fname.
+
+    DATA: lt_sort  TYPE abap_sortorder_tab.
+
+    DATA: lv_count     TYPE i,
+          lv_idx       TYPE i,
+          lv_tabix     TYPE i,
+          lv_lines     TYPE i,
+          lv_id        TYPE i,
+          lv_exit_flag TYPE abap_bool.
+
+    CHECK ct_data[] IS NOT INITIAL.
+    READ TABLE ct_data ASSIGNING <wa_line> INDEX 1.
+
+    " get keys and key components of table by data
+    lo_tabledescr  ?= cl_abap_tabledescr=>describe_by_data( ct_data ).
+    lo_structdescr ?= cl_abap_typedescr=>describe_by_data( <wa_line> ).
+    lt_comp = lo_structdescr->get_components( ).
+
+    IF it_keys IS NOT INITIAL.
+      lt_keys_components = CORRESPONDING #( it_keys MAPPING name = table_line ).
+    ELSE.
+      lt_keys = lo_tabledescr->get_keys( ).
+      READ TABLE lt_keys ASSIGNING <wa_keys> WITH KEY is_primary = abap_true key_kind = cl_abap_tabledescr=>keydefkind_user.
+      IF sy-subrc = 0.
+        lt_keys_components = <wa_keys>-components.
+      ENDIF.
+    ENDIF.
+
+    LOOP AT lt_keys_components ASSIGNING <wa_key_comp>.
+      lv_tabix = sy-tabix.
+      READ TABLE lt_comp ASSIGNING <wa_comp> WITH KEY name = <wa_key_comp>-name.
+      IF sy-subrc = 0.
+        INSERT <wa_comp> INTO TABLE lt_new_comp_sub.
+        "主键类型为数字，将主键改为char10类型
+        IF <wa_comp>-type->type_kind = 'I' OR
+           <wa_comp>-type->type_kind = 'F' OR
+           <wa_comp>-type->type_kind = 'b' OR
+           <wa_comp>-type->type_kind = '8' OR
+           <wa_comp>-type->type_kind = 's'.
+          lo_datadescr ?= cl_abap_datadescr=>describe_by_name( 'VBELN' ).
+          <wa_comp>-type = lo_datadescr.
+        ENDIF.
+        INSERT <wa_comp> INTO TABLE lt_comp_count.
+      ELSE.
+        DELETE lt_keys_components INDEX lv_tabix.
+      ENDIF.
+    ENDLOOP.
+
+    IF lt_keys_components IS INITIAL.
+      RAISE keys_not_found.
+    ENDIF.
+
+    DO 20 TIMES.
+      READ TABLE lt_keys_components ASSIGNING <wa_key_comp> INDEX sy-index.
+      CASE sy-index.
+          all_fields init_value ''.
+      ENDCASE.
+    ENDDO.
+
+    "创建ct_data的引用内表(存指向ct_data明细行的指针)
+    lo_typedescr = cl_abap_typedescr=>describe_by_data( <wa_line> ).
+    lo_refdescr = cl_abap_refdescr=>create( lo_typedescr ).
+    lo_tabletype = cl_abap_tabledescr=>create( p_line_type  = lo_refdescr
+                                               p_table_kind = cl_abap_tabledescr=>tablekind_std ).
+    CREATE DATA lo_data TYPE HANDLE lo_tabletype.
+    ASSIGN lo_data->* TO <table>.
+    CREATE DATA lo_data TYPE HANDLE lo_refdescr.
+    ASSIGN lo_data->* TO <line>.
+
+    "创建第二层级内表(主键+GROUP_COUNT+ITEMS(ct_data的引用内表））
+    " add group_count FIELD.
+    APPEND INITIAL LINE TO lt_new_comp_sub ASSIGNING <wa_comp>.
+    lo_datadescr     ?= cl_abap_datadescr=>describe_by_data( lv_count ).
+    <wa_comp> = VALUE #(  name = 'GROUP_COUNT' type = lo_datadescr ).
+    " add items FIELD.
+    APPEND INITIAL LINE TO lt_new_comp_sub ASSIGNING <wa_comp>.
+    lo_datadescr     ?= cl_abap_datadescr=>describe_by_data( lv_count ).
+    <wa_comp> = VALUE #(  name = 'ITEMS' type = lo_tabletype ).
+
+
+    lo_structdescr  = cl_abap_structdescr=>create( lt_new_comp_sub ).
+    lo_new_tabletype_sub = cl_abap_tabledescr=>create( p_line_type  = lo_structdescr
+                                                       p_table_kind = cl_abap_tabledescr=>tablekind_std ).
+    CREATE DATA lo_data TYPE HANDLE lo_new_tabletype_sub.
+    ASSIGN lo_data->* TO <new_table_sub>.
+    CREATE DATA lo_data TYPE HANDLE lo_structdescr.
+    ASSIGN lo_data->* TO <new_line_sub>.
+
+
+    "创建第一层级内表(GROUP_ID+GROUP_COUNT+ITEMS(第二层级内表））,最终返回结果
+    " add group_id FIELD.
+    APPEND INITIAL LINE TO lt_new_comp ASSIGNING <wa_comp>.
+    lo_datadescr     ?= cl_abap_datadescr=>describe_by_data( lv_count ).
+    <wa_comp> = VALUE #(  name = 'GROUP_ID' type = lo_datadescr ).
+    " add group_count FIELD.
+    APPEND INITIAL LINE TO lt_new_comp ASSIGNING <wa_comp>.
+    <wa_comp> = VALUE #(  name = 'GROUP_COUNT' type = lo_datadescr ).
+    " add items FIELD.
+    APPEND INITIAL LINE TO lt_new_comp ASSIGNING <wa_comp>.
+    lo_datadescr     ?= cl_abap_datadescr=>describe_by_data( lv_count ).
+    <wa_comp> = VALUE #(  name = 'ITEMS' type = lo_new_tabletype_sub ).
+
+    lo_structdescr = cl_abap_structdescr=>create( lt_new_comp ).
+    lo_tabletype = cl_abap_tabledescr=>create( p_line_type  = lo_structdescr
+                                               p_table_kind = cl_abap_tabledescr=>tablekind_std ).
+    CREATE DATA cr_data TYPE HANDLE lo_tabletype.
+    ASSIGN cr_data->* TO <new_table>.
+    CREATE DATA lo_data TYPE HANDLE lo_structdescr.
+    ASSIGN lo_data->* TO <new_line>.
+
+    lt_sort = CORRESPONDING #( lt_keys_components ).
+    IF lo_tabledescr->table_kind = cl_abap_tabledescr=>tablekind_std.
+      SORT ct_data BY (lt_sort).
+    ENDIF.
+
+    "创建主键明细数量内表(主键+GROUP_COUNT）,当参数ct_count有传值时，此步可以省略
+    IF ct_count[] IS INITIAL.
+      " add group_count FIELD.
+      APPEND INITIAL LINE TO lt_comp_count ASSIGNING <wa_comp>.
+      lo_datadescr     ?= cl_abap_datadescr=>describe_by_data( lv_count ).
+      <wa_comp> = VALUE #(  name = 'GROUP_COUNT' type = lo_datadescr ).
+
+      lo_structdescr = cl_abap_structdescr=>create( lt_comp_count ).
+      lo_tabletype = cl_abap_tabledescr=>create( p_line_type  = lo_structdescr
+                                                 p_table_kind = cl_abap_tabledescr=>tablekind_std ).
+      CREATE DATA lo_data TYPE HANDLE lo_tabletype.
+      ASSIGN lo_data->* TO <table_count>.
+      CREATE DATA lo_data TYPE HANDLE lo_structdescr.
+      ASSIGN lo_data->* TO <line_count>.
+
+      "select count(*) from @ct_data as a group by 不可用,被迫用collect统计明细数量，
+      "为了速度考虑，最好是从外部传值进来
+      LOOP AT ct_data ASSIGNING <wa_line>.
+        <line_count> = CORRESPONDING #( <wa_line> ).
+        ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <line_count> TO <wa_value>.
+        <wa_value> = 1.
+        COLLECT <line_count> INTO <table_count>.
+      ENDLOOP.
+    ELSE.
+      ASSIGN ct_count TO <table_count>.
+    ENDIF.
+    lv_lines = lines( <table_count> ).
+    IF iv_keep_order = abap_true.
+      "按主键顺序组合包
+      SORT <table_count> BY (lt_sort).
+      LOOP AT <table_count> ASSIGNING <wa_count>.
+        lv_idx += 1.
+        ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <wa_count> TO <wa_value>.
+        IF <wa_value> >= iv_size."如果单个主键的明细行数大于单个包的最大行数
+          IF <new_table_sub> IS NOT INITIAL.
+            "将前面的数据包添加进<new_table>
+            add_group <new_table_sub>.
+          ENDIF.
+          lv_count = <wa_value>.
+          add_data_and_sub <wa_count>.
+          add_group <new_table_sub>.
+        ELSE.
+          IF lv_count + <wa_value>  > iv_size.
+            "将前面的数据包添加进<new_table>
+            add_group <new_table_sub>.
+          ENDIF.
+          lv_count += <wa_value>.
+          add_data_and_sub <wa_count>.
+          IF lv_idx = lv_lines OR lv_count = iv_size."最后一行了或者正好等于包大小
+            add_group <new_table_sub>.
+          ENDIF.
+        ENDIF.
+      ENDLOOP.
+    ELSE.
+      "按明细行数量倒排序，首尾组包
+      INSERT VALUE #( name = 'GROUP_COUNT' descending = abap_true  ) INTO lt_sort INDEX 1.
+      SORT <table_count> BY (lt_sort).
+      LOOP AT <table_count> ASSIGNING <wa_count>.
+        lv_idx = lv_idx + 1.
+        IF lv_idx > lv_lines.
+          EXIT."所有行项目已经处理，退出循环
+        ENDIF.
+        ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <wa_count> TO <wa_value>.
+        IF <wa_value> >= iv_size."如果单个主键的明细行数大于单个包的最大行数
+          lv_count = <wa_value>.
+          add_data_and_sub <wa_count>.
+          add_group <new_table_sub>.
+        ELSE.
+          lv_count = <wa_value>.
+          add_data_and_sub <wa_count>.
+          WHILE lv_idx < lv_lines AND lv_count < iv_size.
+            "从队尾取行数较少的
+            READ TABLE <table_count> ASSIGNING <wa_count_tail> INDEX lv_lines.
+            ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <wa_count_tail> TO <wa_value>.
+            IF lv_count + <wa_value> <= iv_size.
+              lv_count += <wa_value>.
+              add_data_and_sub <wa_count_tail>.
+              lv_lines = lv_lines - 1.
+            ELSE.
+              EXIT.
+            ENDIF.
+          ENDWHILE.
+          add_group <new_table_sub>.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
+  ENDMETHOD.
+
+
+  METHOD split_group_simple.
+* RETURN STRUCTURE:
+*├── GROUP_ID GROUP_COUNT ITEMS
+*│                           ├── REF TO IT_DATA LINE
+*│                           ├── REF TO IT_DATA LINE
+*├── GROUP_ID GROUP_COUNT ITEMS
+*│                           ├── REF TO IT_DATA LINE
+*│                           ├── REF TO IT_DATA LINE
+    DATA: lo_tabledescr      TYPE REF TO cl_abap_tabledescr,
+          lo_structdescr     TYPE REF TO cl_abap_structdescr,
+          lo_typedescr       TYPE REF TO cl_abap_typedescr,
+          lo_datadescr       TYPE REF TO cl_abap_datadescr,
+          lo_refdescr        TYPE REF TO cl_abap_refdescr,
+          lt_keys            TYPE abap_table_keydescr_tab,
+          lt_keys_components TYPE STANDARD TABLE OF abap_table_keycompdescr,
+          lo_tabletype       TYPE REF TO cl_abap_tabledescr,
+          lt_comp            TYPE cl_abap_structdescr=>component_table,
+          lt_new_comp        LIKE lt_comp,
+          lt_comp_count      LIKE lt_comp,
+          lt_key_count       TYPE abap_keydescr_tab,
+          lo_data            TYPE REF TO data.
+    FIELD-SYMBOLS: <wa_key_comp> LIKE LINE OF lt_keys_components.
+    FIELD-SYMBOLS: <wa_comp> LIKE LINE OF lt_comp.
+    FIELD-SYMBOLS: <new_table> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS: <new_line> TYPE any.
+    FIELD-SYMBOLS: <table> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS: <line> TYPE any.
+
+    FIELD-SYMBOLS: <table_count> TYPE STANDARD TABLE.
+    FIELD-SYMBOLS: <line_count> TYPE any.
+
+    FIELD-SYMBOLS: <wa_keys>           LIKE LINE OF lt_keys,
+                   <wa_key_components> TYPE abap_table_keycompdescr,
+                   <wa_line>           TYPE any,
+                   <wa_count>          TYPE any,
+                   <wa_count_tail>     TYPE any,
+                   <wa_value>          TYPE any,
+                   <wa_value1>         TYPE any,
+                   <wa_value2>         TYPE any,
+                   <wa_value3>         TYPE any,
+                   <wa_value4>         TYPE any,
+                   <wa_value5>         TYPE any,
+                   <wa_value6>         TYPE any,
+                   <wa_value7>         TYPE any,
+                   <wa_value8>         TYPE any,
+                   <wa_value9>         TYPE any,
+                   <wa_value10>        TYPE any,
+                   <wa_value11>        TYPE any,
+                   <wa_value12>        TYPE any,
+                   <wa_value13>        TYPE any,
+                   <wa_value14>        TYPE any,
+                   <wa_value15>        TYPE any,
+                   <wa_value16>        TYPE any,
+                   <wa_value17>        TYPE any,
+                   <wa_value18>        TYPE any,
+                   <wa_value19>        TYPE any,
+                   <wa_value20>        TYPE any
+                   .
+    DATA: lv_fname1  TYPE lvc_fname,
+          lv_fname2  TYPE lvc_fname,
+          lv_fname3  TYPE lvc_fname,
+          lv_fname4  TYPE lvc_fname,
+          lv_fname5  TYPE lvc_fname,
+          lv_fname6  TYPE lvc_fname,
+          lv_fname7  TYPE lvc_fname,
+          lv_fname8  TYPE lvc_fname,
+          lv_fname9  TYPE lvc_fname,
+          lv_fname10 TYPE lvc_fname,
+          lv_fname11 TYPE lvc_fname,
+          lv_fname12 TYPE lvc_fname,
+          lv_fname13 TYPE lvc_fname,
+          lv_fname14 TYPE lvc_fname,
+          lv_fname15 TYPE lvc_fname,
+          lv_fname16 TYPE lvc_fname,
+          lv_fname17 TYPE lvc_fname,
+          lv_fname18 TYPE lvc_fname,
+          lv_fname19 TYPE lvc_fname,
+          lv_fname20 TYPE lvc_fname.
+
+    DATA: lt_sort  TYPE abap_sortorder_tab.
+
+    DATA: lv_count     TYPE i,
+          lv_idx       TYPE i,
+          lv_tabix     TYPE i,
+          lv_lines     TYPE i,
+          lv_id        TYPE i,
+          lv_exit_flag TYPE abap_bool.
+
+    CHECK ct_data[] IS NOT INITIAL.
+    READ TABLE ct_data ASSIGNING <wa_line> INDEX 1.
+
+    " get keys and key components of table by data
+    lo_tabledescr  ?= cl_abap_tabledescr=>describe_by_data( ct_data ).
+    lo_structdescr ?= cl_abap_typedescr=>describe_by_data( <wa_line> ).
+    lt_comp = lo_structdescr->get_components( ).
+
+    IF it_keys IS NOT INITIAL.
+      lt_keys_components = CORRESPONDING #( it_keys MAPPING name = table_line ).
+    ELSE.
+      lt_keys = lo_tabledescr->get_keys( ).
+      READ TABLE lt_keys ASSIGNING <wa_keys> WITH KEY is_primary = abap_true key_kind = cl_abap_tabledescr=>keydefkind_user.
+      IF sy-subrc = 0.
+        lt_keys_components = <wa_keys>-components.
+      ENDIF.
+    ENDIF.
+
+    LOOP AT lt_keys_components ASSIGNING <wa_key_comp>.
+      lv_tabix = sy-tabix.
+      READ TABLE lt_comp ASSIGNING <wa_comp> WITH KEY name = <wa_key_comp>-name.
+      IF sy-subrc = 0.
+        "主键类型为int，将主键改为char10类型
+        IF <wa_comp>-type->type_kind = 'I' OR
+           <wa_comp>-type->type_kind = 'F' OR
+           <wa_comp>-type->type_kind = 'b' OR
+           <wa_comp>-type->type_kind = '8' OR
+           <wa_comp>-type->type_kind = 's'.
+          lo_datadescr ?= cl_abap_datadescr=>describe_by_name( 'VBELN' ).
+          <wa_comp>-type = lo_datadescr.
+        ENDIF.
+        INSERT <wa_comp> INTO TABLE lt_comp_count.
+      ELSE.
+        DELETE lt_keys_components INDEX lv_tabix.
+      ENDIF.
+    ENDLOOP.
+
+    IF lt_keys_components IS INITIAL.
+      RAISE keys_not_found.
+    ENDIF.
+
+    DO 20 TIMES.
+      READ TABLE lt_keys_components ASSIGNING <wa_key_comp> INDEX sy-index.
+      CASE sy-index.
+          all_fields init_value ''.
+      ENDCASE.
+    ENDDO.
+
+    "创建ct_data的引用内表(存指向ct_data明细行的指针)
+    lo_typedescr = cl_abap_typedescr=>describe_by_data( <wa_line> ).
+    lo_refdescr = cl_abap_refdescr=>create( lo_typedescr ).
+    lo_tabletype = cl_abap_tabledescr=>create( p_line_type  = lo_refdescr
+                                               p_table_kind = cl_abap_tabledescr=>tablekind_std ).
+    CREATE DATA lo_data TYPE HANDLE lo_tabletype.
+    ASSIGN lo_data->* TO <table>.
+    CREATE DATA lo_data TYPE HANDLE lo_refdescr.
+    ASSIGN lo_data->* TO <line>.
+
+    "创建第一层级内表(GROUP_ID+GROUP_COUNT+ITEMS(ct_data的引用内表））,最终返回结果
+    " add group_id FIELD.
+    APPEND INITIAL LINE TO lt_new_comp ASSIGNING <wa_comp>.
+    lo_datadescr     ?= cl_abap_datadescr=>describe_by_data( lv_count ).
+    <wa_comp> = VALUE #(  name = 'GROUP_ID' type = lo_datadescr ).
+    " add group_count FIELD.
+    APPEND INITIAL LINE TO lt_new_comp ASSIGNING <wa_comp>.
+    <wa_comp> = VALUE #(  name = 'GROUP_COUNT' type = lo_datadescr ).
+    " add items FIELD.
+    APPEND INITIAL LINE TO lt_new_comp ASSIGNING <wa_comp>.
+    lo_datadescr     ?= cl_abap_datadescr=>describe_by_data( lv_count ).
+    <wa_comp> = VALUE #(  name = 'ITEMS' type = lo_tabletype ).
+
+    lo_structdescr = cl_abap_structdescr=>create( lt_new_comp ).
+    lo_tabletype = cl_abap_tabledescr=>create( p_line_type  = lo_structdescr
+                                               p_table_kind = cl_abap_tabledescr=>tablekind_std ).
+    CREATE DATA cr_data TYPE HANDLE lo_tabletype.
+    ASSIGN cr_data->* TO <new_table>.
+    CREATE DATA lo_data TYPE HANDLE lo_structdescr.
+    ASSIGN lo_data->* TO <new_line>.
+
+    lt_sort = CORRESPONDING #( lt_keys_components ).
+    IF lo_tabledescr->table_kind = cl_abap_tabledescr=>tablekind_std.
+      SORT ct_data BY (lt_sort).
+    ENDIF.
+
+    "创建主键明细数量内表(主键+GROUP_COUNT）,当参数ct_count有传值时，此步可以省略
+    IF ct_count[] IS INITIAL.
+      " add group_count FIELD.
+      APPEND INITIAL LINE TO lt_comp_count ASSIGNING <wa_comp>.
+      lo_datadescr     ?= cl_abap_datadescr=>describe_by_data( lv_count ).
+      <wa_comp> = VALUE #(  name = 'GROUP_COUNT' type = lo_datadescr ).
+
+      lo_structdescr = cl_abap_structdescr=>create( lt_comp_count ).
+      lo_tabletype = cl_abap_tabledescr=>create( p_line_type  = lo_structdescr
+                                                 p_table_kind = cl_abap_tabledescr=>tablekind_std ).
+      CREATE DATA lo_data TYPE HANDLE lo_tabletype.
+      ASSIGN lo_data->* TO <table_count>.
+      CREATE DATA lo_data TYPE HANDLE lo_structdescr.
+      ASSIGN lo_data->* TO <line_count>.
+
+      "select count(*) from @ct_data as a group by 不可用,被迫用collect统计明细数量，
+      "为了速度考虑，最好是从外部传值进来
+      LOOP AT ct_data ASSIGNING <wa_line>.
+        <line_count> = CORRESPONDING #( <wa_line> ).
+        ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <line_count> TO <wa_value>.
+        <wa_value> = 1.
+        COLLECT <line_count> INTO <table_count>.
+      ENDLOOP.
+    ELSE.
+      ASSIGN ct_count TO <table_count>.
+    ENDIF.
+    lv_lines = lines( <table_count> ).
+    IF iv_keep_order = abap_true.
+      SORT <table_count> BY (lt_sort).
+      "按主键顺序组合包
+      LOOP AT <table_count> ASSIGNING <wa_count>.
+        lv_idx += 1.
+        ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <wa_count> TO <wa_value>.
+        IF <wa_value> >= iv_size."如果单个主键的明细行数大于单个包的最大行数
+          IF <table> IS NOT INITIAL.
+            "将前面的数据包添加进<new_table>
+            add_group <table>.
+          ENDIF.
+          lv_count = <wa_value>.
+          add_data <wa_count>.
+          add_group <table>.
+        ELSE.
+          IF lv_count + <wa_value>  > iv_size.
+            "将前面的数据包添加进<new_table>
+            add_group <table>.
+          ENDIF.
+          lv_count += <wa_value>.
+          add_data <wa_count>.
+          IF lv_idx = lv_lines OR lv_count = iv_size."最后一行了或者正好等于包大小
+            add_group <table>.
+          ENDIF.
+        ENDIF.
+      ENDLOOP.
+    ELSE.
+      "按明细行数量倒排序，首尾组包
+      INSERT VALUE #( name = 'GROUP_COUNT' descending = abap_true  ) INTO lt_sort INDEX 1.
+      SORT <table_count> BY (lt_sort).
+      LOOP AT <table_count> ASSIGNING <wa_count>.
+        lv_idx = lv_idx + 1.
+        IF lv_idx > lv_lines.
+          EXIT."所有行项目已经处理，退出循环
+        ENDIF.
+        ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <wa_count> TO <wa_value>.
+        IF <wa_value> >= iv_size."如果单个主键的明细行数大于单个包的最大行数
+          lv_count = <wa_value>.
+          add_data <wa_count>.
+          add_group <table>.
+        ELSE.
+          lv_count = <wa_value>.
+          add_data <wa_count>.
+          WHILE lv_idx < lv_lines AND lv_count < iv_size.
+            "从队尾取行数较少的
+            READ TABLE <table_count> ASSIGNING <wa_count_tail> INDEX lv_lines.
+            ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <wa_count_tail> TO <wa_value>.
+            IF lv_count + <wa_value> <= iv_size.
+              lv_count += <wa_value>.
+              add_data <wa_count_tail>.
+              lv_lines = lv_lines - 1.
+            ELSE.
+              EXIT.
+            ENDIF.
+          ENDWHILE.
+          add_group <table>.
+        ENDIF.
+      ENDLOOP.
+    ENDIF.
   ENDMETHOD.
 ENDCLASS.
