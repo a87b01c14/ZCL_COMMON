@@ -1,12 +1,12 @@
-class ZCL_COMMON definition
-  public
-  final
-  create public .
+CLASS zcl_common DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  types:
-    BEGIN OF ty_billing_return,
+    TYPES:
+      BEGIN OF ty_billing_return,
         fkstk     TYPE likp-fkstk,
         fkivk     TYPE likp-fkivk,
         fkstk_ret TYPE likp-fkstk, "BAPI后交货开票状态
@@ -15,693 +15,693 @@ public section.
         errors    TYPE /syclo/sd_bapivbrkerrors_tab,
         success   TYPE bapivbrksuccess_t,
       END OF ty_billing_return .
-  types:
-    BEGIN OF ty_dn_return,
+    TYPES:
+      BEGIN OF ty_dn_return,
         vbeln  TYPE vbeln_vl,
         return TYPE bapiret2_t,
       END OF ty_dn_return .
-  types:
-    BEGIN OF ty_dn_post_return,
+    TYPES:
+      BEGIN OF ty_dn_post_return,
         mblnr   TYPE mblnr,
         mjahr   TYPE mjahr,
         return  TYPE bapiret2_t,
         message TYPE string,
       END OF ty_dn_post_return .
-  types:
-    tt_posnr TYPE STANDARD TABLE OF /cwm/r_posnr .
-  types:
-    BEGIN OF ty_job_return,
+    TYPES:
+      tt_posnr TYPE STANDARD TABLE OF /cwm/r_posnr .
+    TYPES:
+      BEGIN OF ty_job_return,
         jobname  TYPE tbtcjob-jobname,
         jobcount TYPE tbtcjob-jobcount,
         return   TYPE bapiret2,
       END OF ty_job_return .
-  types:
-    BEGIN OF ty_acc_doc_return,
+    TYPES:
+      BEGIN OF ty_acc_doc_return,
         bukrs   TYPE bkpf-bukrs,
         belnr   TYPE bkpf-belnr,
         gjahr   TYPE bkpf-gjahr,
         return  TYPE bapiret2_t,
         message TYPE string,
       END OF ty_acc_doc_return .
-  types:
-    BEGIN OF ty_pic_tab,
+    TYPES:
+      BEGIN OF ty_pic_tab,
         line(255) TYPE x,
       END OF ty_pic_tab .
-  types:
-    tt_pic_tab TYPE STANDARD TABLE OF ty_pic_tab WITH EMPTY KEY .
-  types:
-    BEGIN OF ty_upload_file_return,
+    TYPES:
+      tt_pic_tab TYPE STANDARD TABLE OF ty_pic_tab WITH EMPTY KEY .
+    TYPES:
+      BEGIN OF ty_upload_file_return,
         subrc      LIKE sy-subrc,
         filelength TYPE i,
         data_tab   TYPE tt_pic_tab,
       END OF ty_upload_file_return .
-  types:
-    BEGIN OF ty_upload_server_return,
+    TYPES:
+      BEGIN OF ty_upload_server_return,
         filename TYPE rlgrap-filename, "文件名+扩展名
         url      TYPE url,
         return   TYPE bapiret2,
       END OF ty_upload_server_return .
-  types:
-    BEGIN OF ty_read_file_return,
+    TYPES:
+      BEGIN OF ty_read_file_return,
         data_tab TYPE tt_pic_tab,
         return   TYPE bapiret2,
       END OF ty_read_file_return .
-  types:
-    BEGIN OF ty_bin2str_return,
+    TYPES:
+      BEGIN OF ty_bin2str_return,
         text_buffer   TYPE string,
         output_length TYPE i,
       END OF ty_bin2str_return .
-  types:
-    BEGIN OF ty_split_file,
+    TYPES:
+      BEGIN OF ty_split_file,
         pure_filename  TYPE rlgrap-filename, "纯文件名
         pure_extension TYPE char4, "扩展名
         filename       TYPE rlgrap-filename, "文件名+扩展名
         pathname       TYPE rlgrap-filename, "路径
       END OF ty_split_file .
 
-  class-methods ADD_AUDIT
-    importing
-      value(IV_UPDATEFLAG) type UPDKZ_D default ''
-    changing
-      !CS_DATA type ANY .
-  class-methods CONFIRM
-    importing
-      value(IV_QUESTION) type STRING optional
-    returning
-      value(RV_ANSWER) type CHAR1 .
-  class-methods SAVE_TEXT
-    importing
-      !ID type THEAD-TDID
-      value(LANGUAGE) type THEAD-TDSPRAS optional
-      !NAME type THEAD-TDNAME
-      !OBJECT type THEAD-TDOBJECT
-      value(TEXT) type STRING
-    returning
-      value(RV_SUBRC) type SY-SUBRC .
-  class-methods READ_TEXT
-    importing
-      !ID type THEAD-TDID
-      value(LANGUAGE) type THEAD-TDSPRAS optional
-      !NAME type THEAD-TDNAME
-      !OBJECT type THEAD-TDOBJECT
-    returning
-      value(RV_TEXT) type STRING .
-  class-methods CREATE_UUID_C32
-    returning
-      value(UUID) type SYSUUID_C32 .
-  class-methods AUTHORITY_CHECK_TCODE
-    importing
-      !TCODE type TCODE .
-  class-methods AUTHORITY_CHECK_BUKRS_RANGE
-    importing
-      !IR_BUKRS type BUKRS_RAN_ITAB
-    returning
-      value(RV_SUBRC) like SY-SUBRC .
-  class-methods AUTHORITY_CHECK_BUKRS
-    importing
-      !IV_BUKRS type BUKRS
-    returning
-      value(RV_SUBRC) like SY-SUBRC .
-  class-methods AUTHORITY_CHECK_WERKS_RANGE
-    importing
-      !IR_WERKS type J_1GVL_RNG_WERKS_T
-      !IV_AUTH_OBJ type CLIKE default 'M_MATE_WRK'
-    returning
-      value(RV_SUBRC) like SY-SUBRC .
-  class-methods AUTHORITY_CHECK_WERKS
-    importing
-      !IV_WERKS type WERKS_D
-      !IV_AUTH_OBJ type CLIKE default 'M_MATE_WRK'
-    returning
-      value(RV_SUBRC) like SY-SUBRC .
-  class-methods AUTHORITY_CHECK_LGORT_RANGE
-    importing
-      !IR_WERKS type J_1GVL_RNG_WERKS_T
-      !IR_LGORT type JITO_LGORT_RANGE_TT
-      !IV_AUTH_OBJ type CLIKE default 'M_MSEG_LGO'
-    returning
-      value(RV_SUBRC) like SY-SUBRC .
-  class-methods AUTHORITY_CHECK_LGORT
-    importing
-      !IV_WERKS type WERKS_D
-      !IV_LGORT type LGORT_D
-      !IV_AUTH_OBJ type CLIKE default 'M_MSEG_LGO'
-    returning
-      value(RV_SUBRC) like SY-SUBRC .
-  class-methods AUTHORITY_CHECK_VKORG_RANGE
-    importing
-      !IR_VKORG type VKORG_RAN_ITAB
-    returning
-      value(RV_SUBRC) like SY-SUBRC .
-  class-methods AUTHORITY_CHECK_VKORG
-    importing
-      !IV_VKORG type VKORG
-    returning
-      value(RV_SUBRC) like SY-SUBRC .
-  class-methods AUTHORITY_CHECK_EKORG_RANGE
-    importing
-      !IR_EKORG type EKORG_RAN_ITAB
-    returning
-      value(RV_SUBRC) like SY-SUBRC .
-  class-methods AUTHORITY_CHECK_EKORG
-    importing
-      !IV_EKORG type EKORG
-    returning
-      value(RV_SUBRC) like SY-SUBRC .
-  class-methods GET_MONTH_LASTDAY
-    importing
-      value(IV_BEGDA) type BEGDA
-    returning
-      value(EV_ENDDA) type ENDDA .
-  class-methods CALC_DATE
-    importing
-      value(DATE) type P0001-BEGDA
-      value(DAYS) type T5A4A-DLYDY
-      value(MONTHS) type T5A4A-DLYMO
-      value(SIGNUM) type T5A4A-SPLIT default '+'
-      value(YEARS) type T5A4A-DLYYR
-    returning
-      value(CALC_DATE) type P0001-BEGDA .
-  class-methods TD_ADD
-    importing
-      !DATE type D
-      !TIME type T
-      !SECS type NUMERIC
-    exporting
-      !RES_DATE type D
-      !RES_TIME type T .
-  class-methods TD_SUBTRACT
-    importing
-      !DATE1 type D
-      !TIME1 type T
-      !DATE2 type D
-      !TIME2 type T
-    exporting
-      value(RES_SECS) type NUMERIC .
-  class-methods GO_BACK_MONTHS
-    importing
-      !CURRDATE type SY-DATUM
-      !BACKMONTHS type NUMC3
-    returning
-      value(NEWDATE) type SY-DATUM .
-  class-methods CONVERT_ABAP_TIMESTAMP_TO_JAVA
-    importing
-      !IV_DATE type SYDATE
-      !IV_TIME type SYUZEIT
-      !IV_MSEC type NUM03 default 000
-    exporting
-      !EV_TIMESTAMP type STRING .
-  class-methods CONVERT_JAVA_TIMESTAMP_TO_ABAP
-    importing
-      !IV_TIMESTAMP type STRING
-    exporting
-      !EV_DATE type SYDATE
-      !EV_TIME type SYUZEIT
-      !EV_MSEC type NUM03 .
-  class-methods VIEW_RANGETAB_TO_SELLIST
-    importing
-      !FIELDNAME type VIMSELLIST-VIEWFIELD
-      !APPEND_CONJUNCTION type VIMSELLIST-AND_OR default 'AND'
-      value(RANGETAB) type STANDARD TABLE
-    changing
-      !SELLIST type TT_VIMSELLIST .
-  class-methods VIEW_MAINTENANCE
-    importing
-      !ACTION type CHAR1 default 'S'
-      !VIEW_NAME type DD02V-TABNAME
-      !DBA_SELLIST type TT_VIMSELLIST optional .
-  class-methods COMBINE_SELTABS
-    importing
-      !IT_NAMED_SELTABS type CL_SHDB_SELTAB=>TT_NAMED_SELTABLES
-      !IV_CLIENT_FIELD type STRING optional
-    returning
-      value(RV_WHERE) type STRING .
-  class-methods SAVE_FILE_DIALOG
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME optional
-    returning
-      value(RV_FILENAME) type RLGRAP-FILENAME .
-  class-methods GET_FILE_NAME
-    importing
-      value(IV_FILTER) type STRING default CL_GUI_FRONTEND_SERVICES=>FILETYPE_EXCEL
-    returning
-      value(RV_FILE) type RLGRAP-FILENAME .
-  class-methods DOWNLOAD_TEMPLATE
-    importing
-      !IV_OBJID type W3OBJID
-      !IV_FILENAME type RLGRAP-FILENAME .
-  class-methods UPLOAD_EXCEL
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-      !IV_SKIPPED_ROWS type I
-      !IV_SKIPPED_COLS type I
-      !IV_MAX_COL type I optional
-      !IV_MAX_ROW type I optional
-    exporting
-      !ET_TABLE type STANDARD TABLE
-    exceptions
-      ERROR
-      CONVER_ERROR .
-  class-methods EXPORT_EXCEL
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-      !IT_TABLE type STANDARD TABLE
-    raising
-      ZCX_EXCEL .
-  class-methods PRINT_EXCEL
-    importing
-      !IV_W3OBJID type W3OBJID
-      !IT_DATA type ZCL_EXCEL_TEMPLATE_DATA=>TT_TEMPLATE_DATA_SHEETS
-      !IV_XLSM type ABAP_BOOL default ABAP_FALSE
-      !IV_AUTOPRINT type ABAP_BOOL default ABAP_FALSE
-      !IV_FILENAME type STRING optional .
-  class-methods DOWNLOAD_FILE
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-      value(DATA_TAB) type ZCL_COMMON=>TT_PIC_TAB
-    returning
-      value(RS_RETURN) type BAPIRET2 .
-  class-methods READ_FILE
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-    returning
-      value(RS_RETURN) type ZCL_COMMON=>TY_READ_FILE_RETURN .
-  class-methods UPLOAD_FILE
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-    returning
-      value(RS_RETURN) type ZCL_COMMON=>TY_UPLOAD_FILE_RETURN .
-  class-methods REMOVE_FILE_FROM_SERVER
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-    returning
-      value(RS_RETURN) type BAPIRET2 .
-  class-methods DOWNLOAD_FILE_FROM_SERVER
-    importing
-      !IV_FILENAME_SERVER type RLGRAP-FILENAME
-      !IV_FILENAME_CLIENT type RLGRAP-FILENAME
-    returning
-      value(RS_RETURN) type BAPIRET2 .
-  class-methods UPLOAD_FILE_TO_SERVER
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-      !IV_PATH type RLGRAP-FILENAME default '/usr/sap/trans'
-    returning
-      value(RS_RETURN) type ZCL_COMMON=>TY_UPLOAD_SERVER_RETURN .
-  class-methods SPLIT_FILE
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-    returning
-      value(RS_RETURN) type ZCL_COMMON=>TY_SPLIT_FILE .
-  class-methods CREATE_URL
-    importing
-      !IV_SUBTYPE type CHAR4
-      !DATA_TAB type ZCL_COMMON=>TT_PIC_TAB
-    returning
-      value(RV_URL) type EPSSURL .
-  class-methods RESIZE_IMAGE
-    importing
-      !IV_ORIGINAL type XSTRING
-      !IV_MAX_WIDTH type I default 1024
-      !IV_MAX_HEIGHT type I default 1024
-    returning
-      value(RV_SMALL) type XSTRING .
-  class-methods STRING_TO_XSTRING
-    importing
-      !IV_STRING type STRING
-    returning
-      value(RV_XSTRING) type XSTRING .
-  class-methods XSTRING_TO_BINARY
-    importing
-      !IV_XSTRING type XSTRING
-    returning
-      value(DATA_TAB) type ZCL_COMMON=>TT_PIC_TAB .
-  class-methods BINARY_TO_XSTRING
-    importing
-      !IV_FILELENGTH type I
-      !DATA_TAB type ZCL_COMMON=>TT_PIC_TAB
-    returning
-      value(RV_XSTRING) type XSTRING .
-  class-methods BINARY_TO_STRING
-    importing
-      !IV_FILELENGTH type I
-      !DATA_TAB type ZCL_COMMON=>TT_PIC_TAB
-    returning
-      value(RS_RETURN) type TY_BIN2STR_RETURN .
-  class-methods SHOW_PICTURE
-    importing
-      !IV_FILENAME type RLGRAP-FILENAME
-      !IO_PICTURE type ref to CL_GUI_PICTURE optional .
-  class-methods GET_OJB_NUMBER
-    importing
-      !IV_OBJ type ZEOBJECT
-      !IV_OBJKEY type ZEKEY
-      !IV_MAX type ZESEQ_MAX
-      !IV_COUNT type ZECOUNT
-      !IV_OBJ_D type ZEOBJECT_D
-      !IV_REPEAT type ZEREPEAT optional
-      !IV_COMMIT type ABAP_BOOL default ABAP_TRUE
-    returning
-      value(RV_SEQ) type ZESEQ .
-  class-methods SHOW_PROGRESSBAR
-    importing
-      !IV_CURRENT type I
-      !IV_TOTAL type I
-      !IV_MSG type STRING optional .
-  class-methods START_JOB
-    importing
-      value(JOBNAME) type TBTCJOB-JOBNAME optional
-      value(JOBUSER) type SY-UNAME optional
-      value(REPORT) type REPID
-      !VARIANT type RSVAR-VARIANT optional
-      !PARAMS type RSPARAMS_TT
-      !START_DATE type TBTCJOB-SDLSTRTDT optional
-      !START_TIME type TBTCJOB-SDLSTRTTM optional
-      !EVENTID type TBTCJOB-EVENTID optional
-      !EVENTPARM type TBTCJOB-EVENTPARM optional
-    returning
-      value(RS_RETURN) type ZCL_COMMON=>TY_JOB_RETURN .
-  class-methods SUBMIT_JOB
-    importing
-      !JOBNAME type TBTCJOB-JOBNAME
-      !JOBCOUNT type TBTCJOB-JOBCOUNT
-      !JOBUSER type SY-UNAME
-      !REPORT type REPID
-      !VARIANT type RSVAR-VARIANT
-    returning
-      value(RV_SUBRC) type SY-SUBRC .
-  class-methods OPEN_JOB
-    importing
-      !JOBNAME type TBTCJOB-JOBNAME
-    returning
-      value(JOBCOUNT) type TBTCJOB-JOBCOUNT .
-  class-methods CLOSE_JOB
-    importing
-      !JOBNAME type TBTCJOB-JOBNAME
-      !JOBCOUNT type TBTCJOB-JOBCOUNT
-      !START_DATE type TBTCJOB-SDLSTRTDT optional
-      !START_TIME type TBTCJOB-SDLSTRTTM optional
-      !EVENTID type TBTCJOB-EVENTID optional
-      !EVENTPARM type TBTCJOB-EVENTPARM optional
-    returning
-      value(RV_SUBRC) type SY-SUBRC .
-  class-methods AM_I_IN_JOB
-    exporting
-      !IN_JOB type ABAP_BOOL
-      !JOBCOUNT type BTCJOBCNT
-      !JOBNAME type BTCJOB .
-  class-methods IS_VARIANT_EXISTS
-    importing
-      !REPORT type SY-REPID
-      !VARIANT type RSVAR-VARIANT
-    returning
-      value(RV_SUBRC) type SY-SUBRC .
-  class-methods GET_DEFAULT_VARIANT .
-  class-methods GET_USER_PARAM
-    importing
-      !IV_PARID type USPARAM-PARID
-    returning
-      value(RV_PARVA) type USPARAM-PARVA .
-  class-methods HAS_EMOJI
-    importing
-      !IV_STR type STRING
-    returning
-      value(RV_VALUE) type ABAP_BOOL .
-  class-methods RV_CALL_DISPLAY_TRANSACTION
-    importing
-      value(BUKRS) type BUKRS default '    '
-      value(GJAHR) type GJAHR default '0000'
-      value(LGNUM) type VBFA-LGNUM default '   '
-      value(POSNR) type VBAP-POSNR default '000000'
-      value(VBELN) type VBUK-VBELN
-      value(AUFNR) type VBAK-AUFNR optional
-      value(VBTYP) type VBUK-VBTYP default ' '
-      value(FI_APPLI) type VBFAL-APPLI default '  ' .
-  class-methods DISPLAY_SD_DOC
-    importing
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_SO
-    importing
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_DN
-    importing
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_IV
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_MIGO
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_PR
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_PO
-    importing
-      !VBELN type VBUK-VBELN .
-  class-methods DISPLAY_FI
-    importing
-      value(BUKRS) type BUKRS default '    '
-      value(GJAHR) type GJAHR default '0000'
-      value(VBELN) type VBUK-VBELN .
-  class-methods DISPLAY_BP
-    importing
-      !IV_PARTNER type BUT000-PARTNER .
-  class-methods DISPLAY_CO
-    importing
-      !AUFNR type AUFNR .
-  class-methods DISPLAY_PLAN_ORDER
-    importing
-      !PLNUM type PLNUM .
-  class-methods DISPLAY_RESB
-    importing
-      !IV_RSNUM type RSNUM .
-  class-methods DISPLAY_IDOC
-    importing
-      !IV_DOCNUM type EDIDC-DOCNUM .
-  class-methods DISPLAY_CHANGEDOCUMENT
-    importing
-      value(IT_OBJECTCLASS) type CDOBJECTCL_RANGE_TAB
-      value(IT_OBJECTID) type CDOBJECTV_RANGE_TAB .
-  class-methods ADD_ROLE
-    importing
-      !IV_USERNAME type BAPIBNAME-BAPIBNAME
-      !IT_ROLES type SUID_TT_BAPIAGR
-    returning
-      value(RETURN) type TT_BAPIRET2 .
-  class-methods SWC_CALL_METHOD
-    importing
-      value(OBJTYPE) type SWOTOBJID-OBJTYPE optional
-      value(OBJKEY) type SWOTOBJID-OBJKEY optional
-      value(OBJECT) type SWOTRTIME-OBJECT optional
-      value(METHOD) type SWO_METHOD default 'DISPLAY'
-    returning
-      value(RETURN) type SWOTRETURN .
-  class-methods CREATE_BILLING_BY_SO
-    importing
-      value(IV_VBELN) type VBELN
-    returning
-      value(RS_RETURN) type TY_BILLING_RETURN .
-  class-methods CREATE_BILLING_BY_DN
-    importing
-      value(IV_VBELN) type VBELN
-    returning
-      value(RS_RETURN) type TY_BILLING_RETURN .
-  class-methods CREATE_SO_DN
-    importing
-      value(IV_VBELN) type VBELN
-    returning
-      value(RS_RETURN) type TY_DN_RETURN .
-  class-methods CREATE_STO_DN
-    importing
-      value(IV_VBELN) type VBELN
-    returning
-      value(RS_RETURN) type TY_DN_RETURN .
-  class-methods POST_DN
-    importing
-      value(IV_VBELN) type LIKP-VBELN
-      !IV_BUDAT type BUDAT optional
-      !IV_RESLO type RESLO optional
-    returning
-      value(RS_RETURN) type TY_DN_POST_RETURN .
-  class-methods REVERSE_DN
-    importing
-      value(IV_VBELN) type LIKP-VBELN
-      !IV_BUDAT type BUDAT optional
-    returning
-      value(RS_RETURN) type TY_DN_POST_RETURN .
-  class-methods DELETE_DN
-    importing
-      value(IV_VBELN) type LIKP-VBELN
-    returning
-      value(RT_RETURN) type BAPIRET2_T .
-  class-methods DELETE_SO
-    importing
-      value(IV_VBELN) type VBAK-VBELN
-      !IT_POSNR type TT_POSNR optional
-      !IV_COMMIT type ABAP_BOOL default 'X'
-    returning
-      value(RT_RETURN) type BAPIRET2_T .
-  class-methods CLOSE_SO
-    importing
-      value(IV_VBELN) type VBAK-VBELN
-      !IT_POSNR type TT_POSNR optional
-      value(IV_ABGRU) type VBAP-ABGRU
-    returning
-      value(RT_RETURN) type BAPIRET2_T .
-  class-methods DELETE_PO
-    importing
-      value(IV_EBELN) type EBELN
-    returning
-      value(RT_RETURN) type BAPIRET2_T .
-  class-methods PRICING_SO
-    importing
-      value(IV_VKORG) type VKORG
-      value(IV_VTWEG) type VTWEG
-      value(IV_SPART) type SPART
-      value(IV_AUART) type AUART
-      value(IV_KUNNR) type KUNNR
-      value(IV_WERKS) type WERKS_D
-      value(IV_MATNR) type MATNR
-      value(IV_PRSDT) type PRSDT default SY-DATUM
-      value(IV_KWMENG) type KWMENG default 1
-      value(IV_LAND1) type LAND1 default 'CN'
-      value(IV_WAERS) type WAERS default 'CNY'
-    returning
-      value(RT_KOMV) type KOMV_T .
-  class-methods ACC_DOCUMENT_REV_POST
-    importing
-      !IV_BUKRS type BKPF-BUKRS
-      !IV_BELNR type BKPF-BELNR
-      !IV_GJAHR type BKPF-GJAHR
-      !IV_STGRD type BKPF-STGRD default '01'
-    returning
-      value(RS_RETURN) type TY_ACC_DOC_RETURN .
-  class-methods BAPIRETURN_GET1
-    importing
-      !TYPE type BAPIRETURN-TYPE
-      !CL type SY-MSGID
-      !NUMBER type SY-MSGNO
-      !PAR1 type SY-MSGV1 optional
-      !PAR2 type SY-MSGV2 optional
-      !PAR3 type SY-MSGV3 optional
-      !PAR4 type SY-MSGV4 optional
-    returning
-      value(BAPIRETURN) type BAPIRET1 .
-  class-methods BAPIRETURN_GET2
-    importing
-      !TYPE type BAPIRETURN-TYPE
-      !CL type SY-MSGID
-      !NUMBER type SY-MSGNO
-      !PAR1 type SY-MSGV1 optional
-      !PAR2 type SY-MSGV2 optional
-      !PAR3 type SY-MSGV3 optional
-      !PAR4 type SY-MSGV4 optional
-    returning
-      value(BAPIRETURN) type BAPIRET2 .
-  class-methods BAPIRETURN_MESSAGE
-    importing
-      !IT_RETURN type BAPIRET2_T
-    exporting
-      !EV_MSGTY type MSGTY
-      !EV_MSGTX type BAPI_MSG .
-  class-methods BAPIRETURN_PROCESS
-    importing
-      !IT_RETURN type BAPIRET2_TT
-    returning
-      value(RS_RETURN) type BAPIRET2 .
-  class-methods BREAK
-    importing
-      !IV_PARAM type USR05-PARID default 'ESP' .
-  class-methods MIGO_CANCEL
-    importing
-      value(IM_MBLNR) type MBLNR
-      value(IM_MJAHR) type MJAHR
-    returning
-      value(RE_RET) type BAPIRET2 .
-  class-methods LOCK
-    importing
-      !IV_OBJ type ANY
-      !IV_SCOPE type SEQAREA-SCOPE default '1'
-      !IV_OUTPUT_MSG type ABAP_BOOL default ABAP_TRUE
-    returning
-      value(RV_SUBRC) like SY-SUBRC .
-  class-methods UNLOCK
-    importing
-      !IV_OBJ type ANY .
-  class-methods SET_MEMORY_DATA
-    importing
-      !ID type CHAR30
-      !DATA type DATA .
-  class-methods GET_MEMORY_DATA
-    importing
-      !ID type CHAR30
-      !AUTO_DEL type ABAP_BOOL default 'X'
-    exporting
-      !DATA type DATA .
-  class-methods FREE_MEMORY_DATA
-    importing
-      !ID type CHAR30 .
-  class-methods SET_SHARED_BUFFER
-    importing
-      !ID type CHAR30
-      !DATA type DATA .
-  class-methods GET_SHARED_BUFFER
-    importing
-      !ID type CHAR30
-      !AUTO_DEL type ABAP_BOOL default 'X'
-    exporting
-      !DATA type DATA .
-  class-methods DELETE_SHARED_BUFFER
-    importing
-      !ID type CHAR30 .
-  class-methods GET_EXCHANGE_RATE
-    importing
-      !IV_RATE_TYPE type BAPI1093_1-RATE_TYPE default 'M'
-      !IV_FROM_CURR type BAPI1093_1-FROM_CURR
-      !IV_TO_CURR type BAPI1093_1-TO_CURRNCY
-      !IV_DATE type BAPI1093_2-TRANS_DATE default SY-DATUM
-    returning
-      value(RV_RATE) type WKURS .
-  class-methods GET_FUNCTION_PARAM
-    importing
-      !IM_NAME type EU_LNAME
-    exporting
-      !EX_INTERFACE type RSFBINTFV
-      !EX_HEADER type HEADER_FB .
-  class-methods PUT_SIGN_IN_FRONT
-    importing
-      !IV_VALUE type ANY
-    returning
-      value(EV_VALUE) type STRING .
-  class-methods SPLIT_GROUP_SIMPLE
-    importing
-      !IV_SIZE type I default 100
-      !IV_KEEP_ORDER type ABAP_BOOL default ABAP_TRUE
-      !IT_KEYS type LVC_T_FNAM optional
-    changing
-      !CT_DATA type INDEX TABLE
-      !CT_COUNT type INDEX TABLE optional
-      !CR_DATA type ref to DATA
-    exceptions
-      KEYS_NOT_FOUND .
-  class-methods SPLIT_GROUP
-    importing
-      !IV_SIZE type I default 100
-      !IV_KEEP_ORDER type ABAP_BOOL default ABAP_TRUE
-      !IT_KEYS type LVC_T_FNAM optional
-    changing
-      !CT_DATA type INDEX TABLE
-      !CT_COUNT type INDEX TABLE optional
-      !CR_DATA type ref to DATA
-    exceptions
-      KEYS_NOT_FOUND .
+    CLASS-METHODS add_audit
+      IMPORTING
+        VALUE(iv_updateflag) TYPE updkz_d DEFAULT ''
+      CHANGING
+        !cs_data             TYPE any .
+    CLASS-METHODS confirm
+      IMPORTING
+        VALUE(iv_question) TYPE string OPTIONAL
+      RETURNING
+        VALUE(rv_answer)   TYPE char1 .
+    CLASS-METHODS save_text
+      IMPORTING
+        !id             TYPE thead-tdid
+        VALUE(language) TYPE thead-tdspras OPTIONAL
+        !name           TYPE thead-tdname
+        !object         TYPE thead-tdobject
+        VALUE(text)     TYPE string
+      RETURNING
+        VALUE(rv_subrc) TYPE sy-subrc .
+    CLASS-METHODS read_text
+      IMPORTING
+        !id             TYPE thead-tdid
+        VALUE(language) TYPE thead-tdspras OPTIONAL
+        !name           TYPE thead-tdname
+        !object         TYPE thead-tdobject
+      RETURNING
+        VALUE(rv_text)  TYPE string .
+    CLASS-METHODS create_uuid_c32
+      RETURNING
+        VALUE(uuid) TYPE sysuuid_c32 .
+    CLASS-METHODS authority_check_tcode
+      IMPORTING
+        !tcode TYPE tcode .
+    CLASS-METHODS authority_check_bukrs_range
+      IMPORTING
+        !ir_bukrs       TYPE bukrs_ran_itab
+      RETURNING
+        VALUE(rv_subrc) LIKE sy-subrc .
+    CLASS-METHODS authority_check_bukrs
+      IMPORTING
+        !iv_bukrs       TYPE bukrs
+      RETURNING
+        VALUE(rv_subrc) LIKE sy-subrc .
+    CLASS-METHODS authority_check_werks_range
+      IMPORTING
+        !ir_werks       TYPE j_1gvl_rng_werks_t
+        !iv_auth_obj    TYPE clike DEFAULT 'M_MATE_WRK'
+      RETURNING
+        VALUE(rv_subrc) LIKE sy-subrc .
+    CLASS-METHODS authority_check_werks
+      IMPORTING
+        !iv_werks       TYPE werks_d
+        !iv_auth_obj    TYPE clike DEFAULT 'M_MATE_WRK'
+      RETURNING
+        VALUE(rv_subrc) LIKE sy-subrc .
+    CLASS-METHODS authority_check_lgort_range
+      IMPORTING
+        !ir_werks       TYPE j_1gvl_rng_werks_t
+        !ir_lgort       TYPE jito_lgort_range_tt
+        !iv_auth_obj    TYPE clike DEFAULT 'M_MSEG_LGO'
+      RETURNING
+        VALUE(rv_subrc) LIKE sy-subrc .
+    CLASS-METHODS authority_check_lgort
+      IMPORTING
+        !iv_werks       TYPE werks_d
+        !iv_lgort       TYPE lgort_d
+        !iv_auth_obj    TYPE clike DEFAULT 'M_MSEG_LGO'
+      RETURNING
+        VALUE(rv_subrc) LIKE sy-subrc .
+    CLASS-METHODS authority_check_vkorg_range
+      IMPORTING
+        !ir_vkorg       TYPE vkorg_ran_itab
+      RETURNING
+        VALUE(rv_subrc) LIKE sy-subrc .
+    CLASS-METHODS authority_check_vkorg
+      IMPORTING
+        !iv_vkorg       TYPE vkorg
+      RETURNING
+        VALUE(rv_subrc) LIKE sy-subrc .
+    CLASS-METHODS authority_check_ekorg_range
+      IMPORTING
+        !ir_ekorg       TYPE ekorg_ran_itab
+      RETURNING
+        VALUE(rv_subrc) LIKE sy-subrc .
+    CLASS-METHODS authority_check_ekorg
+      IMPORTING
+        !iv_ekorg       TYPE ekorg
+      RETURNING
+        VALUE(rv_subrc) LIKE sy-subrc .
+    CLASS-METHODS get_month_lastday
+      IMPORTING
+        VALUE(iv_begda) TYPE begda
+      RETURNING
+        VALUE(ev_endda) TYPE endda .
+    CLASS-METHODS calc_date
+      IMPORTING
+        VALUE(date)      TYPE p0001-begda
+        VALUE(days)      TYPE t5a4a-dlydy
+        VALUE(months)    TYPE t5a4a-dlymo
+        VALUE(signum)    TYPE t5a4a-split DEFAULT '+'
+        VALUE(years)     TYPE t5a4a-dlyyr
+      RETURNING
+        VALUE(calc_date) TYPE p0001-begda .
+    CLASS-METHODS td_add
+      IMPORTING
+        !date     TYPE d
+        !time     TYPE t
+        !secs     TYPE numeric
+      EXPORTING
+        !res_date TYPE d
+        !res_time TYPE t .
+    CLASS-METHODS td_subtract
+      IMPORTING
+        !date1          TYPE d
+        !time1          TYPE t
+        !date2          TYPE d
+        !time2          TYPE t
+      EXPORTING
+        VALUE(res_secs) TYPE numeric .
+    CLASS-METHODS go_back_months
+      IMPORTING
+        !currdate      TYPE sy-datum
+        !backmonths    TYPE numc3
+      RETURNING
+        VALUE(newdate) TYPE sy-datum .
+    CLASS-METHODS convert_abap_timestamp_to_java
+      IMPORTING
+        !iv_date      TYPE sydate
+        !iv_time      TYPE syuzeit
+        !iv_msec      TYPE num03 DEFAULT 000
+      EXPORTING
+        !ev_timestamp TYPE string .
+    CLASS-METHODS convert_java_timestamp_to_abap
+      IMPORTING
+        !iv_timestamp TYPE string
+      EXPORTING
+        !ev_date      TYPE sydate
+        !ev_time      TYPE syuzeit
+        !ev_msec      TYPE num03 .
+    CLASS-METHODS view_rangetab_to_sellist
+      IMPORTING
+        !fieldname          TYPE vimsellist-viewfield
+        !append_conjunction TYPE vimsellist-and_or DEFAULT 'AND'
+        VALUE(rangetab)     TYPE STANDARD TABLE
+      CHANGING
+        !sellist            TYPE tt_vimsellist .
+    CLASS-METHODS view_maintenance
+      IMPORTING
+        !action      TYPE char1 DEFAULT 'S'
+        !view_name   TYPE dd02v-tabname
+        !dba_sellist TYPE tt_vimsellist OPTIONAL .
+    CLASS-METHODS combine_seltabs
+      IMPORTING
+        !it_named_seltabs TYPE cl_shdb_seltab=>tt_named_seltables
+        !iv_client_field  TYPE string OPTIONAL
+      RETURNING
+        VALUE(rv_where)   TYPE string .
+    CLASS-METHODS save_file_dialog
+      IMPORTING
+        !iv_filename       TYPE rlgrap-filename OPTIONAL
+      RETURNING
+        VALUE(rv_filename) TYPE rlgrap-filename .
+    CLASS-METHODS get_file_name
+      IMPORTING
+        VALUE(iv_filter) TYPE string DEFAULT cl_gui_frontend_services=>filetype_excel
+      RETURNING
+        VALUE(rv_file)   TYPE rlgrap-filename .
+    CLASS-METHODS download_template
+      IMPORTING
+        !iv_objid    TYPE w3objid
+        !iv_filename TYPE rlgrap-filename .
+    CLASS-METHODS upload_excel
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+        !iv_skipped_rows TYPE i
+        !iv_skipped_cols TYPE i
+        !iv_max_col      TYPE i OPTIONAL
+        !iv_max_row      TYPE i OPTIONAL
+      EXPORTING
+        !et_table        TYPE STANDARD TABLE
+      EXCEPTIONS
+        error
+        conver_error .
+    CLASS-METHODS export_excel
+      IMPORTING
+        !iv_filename TYPE rlgrap-filename
+        !it_table    TYPE STANDARD TABLE
+      RAISING
+        zcx_excel .
+    CLASS-METHODS print_excel
+      IMPORTING
+        !iv_w3objid   TYPE w3objid
+        !it_data      TYPE zcl_excel_template_data=>tt_template_data_sheets
+        !iv_xlsm      TYPE abap_bool DEFAULT abap_false
+        !iv_autoprint TYPE abap_bool DEFAULT abap_false
+        !iv_filename  TYPE string OPTIONAL .
+    CLASS-METHODS download_file
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+        VALUE(data_tab)  TYPE zcl_common=>tt_pic_tab
+      RETURNING
+        VALUE(rs_return) TYPE bapiret2 .
+    CLASS-METHODS read_file
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+      RETURNING
+        VALUE(rs_return) TYPE zcl_common=>ty_read_file_return .
+    CLASS-METHODS upload_file
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+      RETURNING
+        VALUE(rs_return) TYPE zcl_common=>ty_upload_file_return .
+    CLASS-METHODS remove_file_from_server
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+      RETURNING
+        VALUE(rs_return) TYPE bapiret2 .
+    CLASS-METHODS download_file_from_server
+      IMPORTING
+        !iv_filename_server TYPE rlgrap-filename
+        !iv_filename_client TYPE rlgrap-filename
+      RETURNING
+        VALUE(rs_return)    TYPE bapiret2 .
+    CLASS-METHODS upload_file_to_server
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+        !iv_path         TYPE rlgrap-filename DEFAULT '/usr/sap/trans'
+      RETURNING
+        VALUE(rs_return) TYPE zcl_common=>ty_upload_server_return .
+    CLASS-METHODS split_file
+      IMPORTING
+        !iv_filename     TYPE rlgrap-filename
+      RETURNING
+        VALUE(rs_return) TYPE zcl_common=>ty_split_file .
+    CLASS-METHODS create_url
+      IMPORTING
+        !iv_subtype   TYPE char4
+        !data_tab     TYPE zcl_common=>tt_pic_tab
+      RETURNING
+        VALUE(rv_url) TYPE epssurl .
+    CLASS-METHODS resize_image
+      IMPORTING
+        !iv_original    TYPE xstring
+        !iv_max_width   TYPE i DEFAULT 1024
+        !iv_max_height  TYPE i DEFAULT 1024
+      RETURNING
+        VALUE(rv_small) TYPE xstring .
+    CLASS-METHODS string_to_xstring
+      IMPORTING
+        !iv_string        TYPE string
+      RETURNING
+        VALUE(rv_xstring) TYPE xstring .
+    CLASS-METHODS xstring_to_binary
+      IMPORTING
+        !iv_xstring     TYPE xstring
+      RETURNING
+        VALUE(data_tab) TYPE zcl_common=>tt_pic_tab .
+    CLASS-METHODS binary_to_xstring
+      IMPORTING
+        !iv_filelength    TYPE i
+        !data_tab         TYPE zcl_common=>tt_pic_tab
+      RETURNING
+        VALUE(rv_xstring) TYPE xstring .
+    CLASS-METHODS binary_to_string
+      IMPORTING
+        !iv_filelength   TYPE i
+        !data_tab        TYPE zcl_common=>tt_pic_tab
+      RETURNING
+        VALUE(rs_return) TYPE ty_bin2str_return .
+    CLASS-METHODS show_picture
+      IMPORTING
+        !iv_filename TYPE rlgrap-filename
+        !io_picture  TYPE REF TO cl_gui_picture OPTIONAL .
+    CLASS-METHODS get_ojb_number
+      IMPORTING
+        !iv_obj       TYPE zeobject
+        !iv_objkey    TYPE zekey
+        !iv_max       TYPE zeseq_max
+        !iv_count     TYPE zecount
+        !iv_obj_d     TYPE zeobject_d
+        !iv_repeat    TYPE zerepeat OPTIONAL
+        !iv_commit    TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(rv_seq) TYPE zeseq .
+    CLASS-METHODS show_progressbar
+      IMPORTING
+        !iv_current TYPE i
+        !iv_total   TYPE i
+        !iv_msg     TYPE string OPTIONAL .
+    CLASS-METHODS start_job
+      IMPORTING
+        VALUE(jobname)   TYPE tbtcjob-jobname OPTIONAL
+        VALUE(jobuser)   TYPE sy-uname OPTIONAL
+        VALUE(report)    TYPE repid
+        !variant         TYPE rsvar-variant OPTIONAL
+        !params          TYPE rsparams_tt
+        !start_date      TYPE tbtcjob-sdlstrtdt OPTIONAL
+        !start_time      TYPE tbtcjob-sdlstrttm OPTIONAL
+        !eventid         TYPE tbtcjob-eventid OPTIONAL
+        !eventparm       TYPE tbtcjob-eventparm OPTIONAL
+      RETURNING
+        VALUE(rs_return) TYPE zcl_common=>ty_job_return .
+    CLASS-METHODS submit_job
+      IMPORTING
+        !jobname        TYPE tbtcjob-jobname
+        !jobcount       TYPE tbtcjob-jobcount
+        !jobuser        TYPE sy-uname
+        !report         TYPE repid
+        !variant        TYPE rsvar-variant
+      RETURNING
+        VALUE(rv_subrc) TYPE sy-subrc .
+    CLASS-METHODS open_job
+      IMPORTING
+        !jobname        TYPE tbtcjob-jobname
+      RETURNING
+        VALUE(jobcount) TYPE tbtcjob-jobcount .
+    CLASS-METHODS close_job
+      IMPORTING
+        !jobname        TYPE tbtcjob-jobname
+        !jobcount       TYPE tbtcjob-jobcount
+        !start_date     TYPE tbtcjob-sdlstrtdt OPTIONAL
+        !start_time     TYPE tbtcjob-sdlstrttm OPTIONAL
+        !eventid        TYPE tbtcjob-eventid OPTIONAL
+        !eventparm      TYPE tbtcjob-eventparm OPTIONAL
+      RETURNING
+        VALUE(rv_subrc) TYPE sy-subrc .
+    CLASS-METHODS am_i_in_job
+      EXPORTING
+        !in_job   TYPE abap_bool
+        !jobcount TYPE btcjobcnt
+        !jobname  TYPE btcjob .
+    CLASS-METHODS is_variant_exists
+      IMPORTING
+        !report         TYPE sy-repid
+        !variant        TYPE rsvar-variant
+      RETURNING
+        VALUE(rv_subrc) TYPE sy-subrc .
+    CLASS-METHODS get_default_variant .
+    CLASS-METHODS get_user_param
+      IMPORTING
+        !iv_parid       TYPE usparam-parid
+      RETURNING
+        VALUE(rv_parva) TYPE usparam-parva .
+    CLASS-METHODS has_emoji
+      IMPORTING
+        !iv_str         TYPE string
+      RETURNING
+        VALUE(rv_value) TYPE abap_bool .
+    CLASS-METHODS rv_call_display_transaction
+      IMPORTING
+        VALUE(bukrs)    TYPE bukrs DEFAULT '    '
+        VALUE(gjahr)    TYPE gjahr DEFAULT '0000'
+        VALUE(lgnum)    TYPE vbfa-lgnum DEFAULT '   '
+        VALUE(posnr)    TYPE vbap-posnr DEFAULT '000000'
+        VALUE(vbeln)    TYPE vbuk-vbeln
+        VALUE(aufnr)    TYPE vbak-aufnr OPTIONAL
+        VALUE(vbtyp)    TYPE vbuk-vbtyp DEFAULT ' '
+        VALUE(fi_appli) TYPE vbfal-appli DEFAULT '  ' .
+    CLASS-METHODS display_sd_doc
+      IMPORTING
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_so
+      IMPORTING
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_dn
+      IMPORTING
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_iv
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_migo
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_pr
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_po
+      IMPORTING
+        !vbeln TYPE vbuk-vbeln .
+    CLASS-METHODS display_fi
+      IMPORTING
+        VALUE(bukrs) TYPE bukrs DEFAULT '    '
+        VALUE(gjahr) TYPE gjahr DEFAULT '0000'
+        VALUE(vbeln) TYPE vbuk-vbeln .
+    CLASS-METHODS display_bp
+      IMPORTING
+        !iv_partner TYPE but000-partner .
+    CLASS-METHODS display_co
+      IMPORTING
+        !aufnr TYPE aufnr .
+    CLASS-METHODS display_plan_order
+      IMPORTING
+        !plnum TYPE plnum .
+    CLASS-METHODS display_resb
+      IMPORTING
+        !iv_rsnum TYPE rsnum .
+    CLASS-METHODS display_idoc
+      IMPORTING
+        !iv_docnum TYPE edidc-docnum .
+    CLASS-METHODS display_changedocument
+      IMPORTING
+        VALUE(it_objectclass) TYPE cdobjectcl_range_tab
+        VALUE(it_objectid)    TYPE cdobjectv_range_tab .
+    CLASS-METHODS add_role
+      IMPORTING
+        !iv_username  TYPE bapibname-bapibname
+        !it_roles     TYPE suid_tt_bapiagr
+      RETURNING
+        VALUE(return) TYPE tt_bapiret2 .
+    CLASS-METHODS swc_call_method
+      IMPORTING
+        VALUE(objtype) TYPE swotobjid-objtype OPTIONAL
+        VALUE(objkey)  TYPE swotobjid-objkey OPTIONAL
+        VALUE(object)  TYPE swotrtime-object OPTIONAL
+        VALUE(method)  TYPE swo_method DEFAULT 'DISPLAY'
+      RETURNING
+        VALUE(return)  TYPE swotreturn .
+    CLASS-METHODS create_billing_by_so
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rs_return) TYPE ty_billing_return .
+    CLASS-METHODS create_billing_by_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rs_return) TYPE ty_billing_return .
+    CLASS-METHODS create_so_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rs_return) TYPE ty_dn_return .
+    CLASS-METHODS create_sto_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbeln
+      RETURNING
+        VALUE(rs_return) TYPE ty_dn_return .
+    CLASS-METHODS post_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE likp-vbeln
+        !iv_budat        TYPE budat OPTIONAL
+        !iv_reslo        TYPE reslo OPTIONAL
+      RETURNING
+        VALUE(rs_return) TYPE ty_dn_post_return .
+    CLASS-METHODS reverse_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE likp-vbeln
+        !iv_budat        TYPE budat OPTIONAL
+      RETURNING
+        VALUE(rs_return) TYPE ty_dn_post_return .
+    CLASS-METHODS delete_dn
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE likp-vbeln
+      RETURNING
+        VALUE(rt_return) TYPE bapiret2_t .
+    CLASS-METHODS delete_so
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbak-vbeln
+        !it_posnr        TYPE tt_posnr OPTIONAL
+        !iv_commit       TYPE abap_bool DEFAULT 'X'
+      RETURNING
+        VALUE(rt_return) TYPE bapiret2_t .
+    CLASS-METHODS close_so
+      IMPORTING
+        VALUE(iv_vbeln)  TYPE vbak-vbeln
+        !it_posnr        TYPE tt_posnr OPTIONAL
+        VALUE(iv_abgru)  TYPE vbap-abgru
+      RETURNING
+        VALUE(rt_return) TYPE bapiret2_t .
+    CLASS-METHODS delete_po
+      IMPORTING
+        VALUE(iv_ebeln)  TYPE ebeln
+      RETURNING
+        VALUE(rt_return) TYPE bapiret2_t .
+    CLASS-METHODS pricing_so
+      IMPORTING
+        VALUE(iv_vkorg)  TYPE vkorg
+        VALUE(iv_vtweg)  TYPE vtweg
+        VALUE(iv_spart)  TYPE spart
+        VALUE(iv_auart)  TYPE auart
+        VALUE(iv_kunnr)  TYPE kunnr
+        VALUE(iv_werks)  TYPE werks_d
+        VALUE(iv_matnr)  TYPE matnr
+        VALUE(iv_prsdt)  TYPE prsdt DEFAULT sy-datum
+        VALUE(iv_kwmeng) TYPE kwmeng DEFAULT 1
+        VALUE(iv_land1)  TYPE land1 DEFAULT 'CN'
+        VALUE(iv_waers)  TYPE waers DEFAULT 'CNY'
+      RETURNING
+        VALUE(rt_komv)   TYPE komv_t .
+    CLASS-METHODS acc_document_rev_post
+      IMPORTING
+        !iv_bukrs        TYPE bkpf-bukrs
+        !iv_belnr        TYPE bkpf-belnr
+        !iv_gjahr        TYPE bkpf-gjahr
+        !iv_stgrd        TYPE bkpf-stgrd DEFAULT '01'
+      RETURNING
+        VALUE(rs_return) TYPE ty_acc_doc_return .
+    CLASS-METHODS bapireturn_get1
+      IMPORTING
+        !type             TYPE bapireturn-type
+        !cl               TYPE sy-msgid
+        !number           TYPE sy-msgno
+        !par1             TYPE sy-msgv1 OPTIONAL
+        !par2             TYPE sy-msgv2 OPTIONAL
+        !par3             TYPE sy-msgv3 OPTIONAL
+        !par4             TYPE sy-msgv4 OPTIONAL
+      RETURNING
+        VALUE(bapireturn) TYPE bapiret1 .
+    CLASS-METHODS bapireturn_get2
+      IMPORTING
+        !type             TYPE bapireturn-type
+        !cl               TYPE sy-msgid
+        !number           TYPE sy-msgno
+        !par1             TYPE sy-msgv1 OPTIONAL
+        !par2             TYPE sy-msgv2 OPTIONAL
+        !par3             TYPE sy-msgv3 OPTIONAL
+        !par4             TYPE sy-msgv4 OPTIONAL
+      RETURNING
+        VALUE(bapireturn) TYPE bapiret2 .
+    CLASS-METHODS bapireturn_message
+      IMPORTING
+        !it_return TYPE bapiret2_t
+      EXPORTING
+        !ev_msgty  TYPE msgty
+        !ev_msgtx  TYPE bapi_msg .
+    CLASS-METHODS bapireturn_process
+      IMPORTING
+        !it_return       TYPE bapiret2_tt
+      RETURNING
+        VALUE(rs_return) TYPE bapiret2 .
+    CLASS-METHODS break
+      IMPORTING
+        !iv_param TYPE usr05-parid DEFAULT 'ESP' .
+    CLASS-METHODS migo_cancel
+      IMPORTING
+        VALUE(im_mblnr) TYPE mblnr
+        VALUE(im_mjahr) TYPE mjahr
+      RETURNING
+        VALUE(re_ret)   TYPE bapiret2 .
+    CLASS-METHODS lock
+      IMPORTING
+        !iv_obj         TYPE any
+        !iv_scope       TYPE seqarea-scope DEFAULT '1'
+        !iv_output_msg  TYPE abap_bool DEFAULT abap_true
+      RETURNING
+        VALUE(rv_subrc) LIKE sy-subrc .
+    CLASS-METHODS unlock
+      IMPORTING
+        !iv_obj TYPE any .
+    CLASS-METHODS set_memory_data
+      IMPORTING
+        !id   TYPE char30
+        !data TYPE data .
+    CLASS-METHODS get_memory_data
+      IMPORTING
+        !id       TYPE char30
+        !auto_del TYPE abap_bool DEFAULT 'X'
+      EXPORTING
+        !data     TYPE data .
+    CLASS-METHODS free_memory_data
+      IMPORTING
+        !id TYPE char30 .
+    CLASS-METHODS set_shared_buffer
+      IMPORTING
+        !id   TYPE char30
+        !data TYPE data .
+    CLASS-METHODS get_shared_buffer
+      IMPORTING
+        !id       TYPE char30
+        !auto_del TYPE abap_bool DEFAULT 'X'
+      EXPORTING
+        !data     TYPE data .
+    CLASS-METHODS delete_shared_buffer
+      IMPORTING
+        !id TYPE char30 .
+    CLASS-METHODS get_exchange_rate
+      IMPORTING
+        !iv_rate_type  TYPE bapi1093_1-rate_type DEFAULT 'M'
+        !iv_from_curr  TYPE bapi1093_1-from_curr
+        !iv_to_curr    TYPE bapi1093_1-to_currncy
+        !iv_date       TYPE bapi1093_2-trans_date DEFAULT sy-datum
+      RETURNING
+        VALUE(rv_rate) TYPE wkurs .
+    CLASS-METHODS get_function_param
+      IMPORTING
+        !im_name      TYPE eu_lname
+      EXPORTING
+        !ex_interface TYPE rsfbintfv
+        !ex_header    TYPE header_fb .
+    CLASS-METHODS put_sign_in_front
+      IMPORTING
+        !iv_value       TYPE any
+      RETURNING
+        VALUE(ev_value) TYPE string .
+    CLASS-METHODS split_group_simple
+      IMPORTING
+        !iv_size       TYPE i DEFAULT 100
+        !iv_keep_order TYPE abap_bool DEFAULT abap_true
+        !it_keys       TYPE lvc_t_fnam OPTIONAL
+      CHANGING
+        !ct_data       TYPE INDEX TABLE
+        !ct_count      TYPE INDEX TABLE OPTIONAL
+        !cr_data       TYPE REF TO data
+      EXCEPTIONS
+        keys_not_found .
+    CLASS-METHODS split_group
+      IMPORTING
+        !iv_size       TYPE i DEFAULT 100
+        !iv_keep_order TYPE abap_bool DEFAULT abap_true
+        !it_keys       TYPE lvc_t_fnam OPTIONAL
+      CHANGING
+        !ct_data       TYPE INDEX TABLE
+        !ct_count      TYPE INDEX TABLE OPTIONAL
+        !cr_data       TYPE REF TO data
+      EXCEPTIONS
+        keys_not_found .
   PROTECTED SECTION.
-private section.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_COMMON IMPLEMENTATION.
+CLASS zcl_common IMPLEMENTATION.
 
 
   METHOD am_i_in_job.
@@ -4487,7 +4487,8 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     lt_comp = lo_structdescr->get_components( ).
 
     IF it_keys IS NOT INITIAL.
-      lt_keys_components = CORRESPONDING #( it_keys MAPPING name = table_line ).
+      "lt_keys_components = CORRESPONDING #( it_keys MAPPING name = table_line )."sometimes not work
+      lt_keys_components = VALUE #( FOR wa_key IN it_keys ( name = wa_key ) ).
     ELSE.
       lt_keys = lo_tabledescr->get_keys( ).
       READ TABLE lt_keys ASSIGNING <wa_keys> WITH KEY is_primary = abap_true key_kind = cl_abap_tabledescr=>keydefkind_user.
@@ -4501,15 +4502,6 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       READ TABLE lt_comp ASSIGNING <wa_comp> WITH KEY name = <wa_key_comp>-name.
       IF sy-subrc = 0.
         INSERT <wa_comp> INTO TABLE lt_new_comp_sub.
-        "主键类型为数字，将主键改为char10类型
-        IF <wa_comp>-type->type_kind = 'I' OR
-           <wa_comp>-type->type_kind = 'F' OR
-           <wa_comp>-type->type_kind = 'b' OR
-           <wa_comp>-type->type_kind = '8' OR
-           <wa_comp>-type->type_kind = 's'.
-          lo_datadescr ?= cl_abap_datadescr=>describe_by_name( 'VBELN' ).
-          <wa_comp>-type = lo_datadescr.
-        ENDIF.
         INSERT <wa_comp> INTO TABLE lt_comp_count.
       ELSE.
         DELETE lt_keys_components INDEX lv_tabix.
@@ -4530,8 +4522,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     "创建ct_data的引用内表(存指向ct_data明细行的指针)
     lo_typedescr = cl_abap_typedescr=>describe_by_data( <wa_line> ).
     lo_refdescr = cl_abap_refdescr=>create( lo_typedescr ).
-    lo_tabletype = cl_abap_tabledescr=>create( p_line_type  = lo_refdescr
-                                               p_table_kind = cl_abap_tabledescr=>tablekind_std ).
+    lo_tabletype = cl_abap_tabledescr=>create( p_line_type = lo_refdescr ).
     CREATE DATA lo_data TYPE HANDLE lo_tabletype.
     ASSIGN lo_data->* TO <table>.
     CREATE DATA lo_data TYPE HANDLE lo_refdescr.
@@ -4549,8 +4540,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
 
 
     lo_structdescr  = cl_abap_structdescr=>create( lt_new_comp_sub ).
-    lo_new_tabletype_sub = cl_abap_tabledescr=>create( p_line_type  = lo_structdescr
-                                                       p_table_kind = cl_abap_tabledescr=>tablekind_std ).
+    lo_new_tabletype_sub = cl_abap_tabledescr=>create( p_line_type = lo_structdescr ).
     CREATE DATA lo_data TYPE HANDLE lo_new_tabletype_sub.
     ASSIGN lo_data->* TO <new_table_sub>.
     CREATE DATA lo_data TYPE HANDLE lo_structdescr.
@@ -4571,8 +4561,7 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     <wa_comp> = VALUE #(  name = 'ITEMS' type = lo_new_tabletype_sub ).
 
     lo_structdescr = cl_abap_structdescr=>create( lt_new_comp ).
-    lo_tabletype = cl_abap_tabledescr=>create( p_line_type  = lo_structdescr
-                                               p_table_kind = cl_abap_tabledescr=>tablekind_std ).
+    lo_tabletype = cl_abap_tabledescr=>create( p_line_type = lo_structdescr ).
     CREATE DATA cr_data TYPE HANDLE lo_tabletype.
     ASSIGN cr_data->* TO <new_table>.
     CREATE DATA lo_data TYPE HANDLE lo_structdescr.
@@ -4591,20 +4580,26 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       <wa_comp> = VALUE #(  name = 'GROUP_COUNT' type = lo_datadescr ).
 
       lo_structdescr = cl_abap_structdescr=>create( lt_comp_count ).
-      lo_tabletype = cl_abap_tabledescr=>create( p_line_type  = lo_structdescr
-                                                 p_table_kind = cl_abap_tabledescr=>tablekind_std ).
+      lo_tabletype = cl_abap_tabledescr=>create( p_line_type = lo_structdescr ).
       CREATE DATA lo_data TYPE HANDLE lo_tabletype.
       ASSIGN lo_data->* TO <table_count>.
       CREATE DATA lo_data TYPE HANDLE lo_structdescr.
       ASSIGN lo_data->* TO <line_count>.
 
-      "select count(*) from @ct_data as a group by 不可用,被迫用collect统计明细数量，
+      "select count(*) from @ct_data as a group by 不可用
       "为了速度考虑，最好是从外部传值进来
       LOOP AT ct_data ASSIGNING <wa_line>.
-        <line_count> = CORRESPONDING #( <wa_line> ).
-        ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <line_count> TO <wa_value>.
-        <wa_value> = 1.
-        COLLECT <line_count> INTO <table_count>.
+        read_table <wa_line> <table_count> <line_count>.
+        IF sy-subrc = 0.
+          ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <line_count> TO <wa_value>.
+          <wa_value> += 1.
+        ELSE.
+          ASSIGN lo_data->* TO <line_count>.
+          <line_count> = CORRESPONDING #( <wa_line> ).
+          ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <line_count> TO <wa_value>.
+          <wa_value> = 1.
+          INSERT <line_count> INTO <table_count> INDEX sy-tabix.
+        ENDIF.
       ENDLOOP.
     ELSE.
       ASSIGN ct_count TO <table_count>.
@@ -4769,7 +4764,8 @@ CLASS ZCL_COMMON IMPLEMENTATION.
     lt_comp = lo_structdescr->get_components( ).
 
     IF it_keys IS NOT INITIAL.
-      lt_keys_components = CORRESPONDING #( it_keys MAPPING name = table_line ).
+      "lt_keys_components = CORRESPONDING #( it_keys MAPPING name = table_line )."sometimes not work
+      lt_keys_components = VALUE #( FOR wa_key IN it_keys ( name = wa_key ) ).
     ELSE.
       lt_keys = lo_tabledescr->get_keys( ).
       READ TABLE lt_keys ASSIGNING <wa_keys> WITH KEY is_primary = abap_true key_kind = cl_abap_tabledescr=>keydefkind_user.
@@ -4782,15 +4778,6 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       lv_tabix = sy-tabix.
       READ TABLE lt_comp ASSIGNING <wa_comp> WITH KEY name = <wa_key_comp>-name.
       IF sy-subrc = 0.
-        "主键类型为int，将主键改为char10类型
-        IF <wa_comp>-type->type_kind = 'I' OR
-           <wa_comp>-type->type_kind = 'F' OR
-           <wa_comp>-type->type_kind = 'b' OR
-           <wa_comp>-type->type_kind = '8' OR
-           <wa_comp>-type->type_kind = 's'.
-          lo_datadescr ?= cl_abap_datadescr=>describe_by_name( 'VBELN' ).
-          <wa_comp>-type = lo_datadescr.
-        ENDIF.
         INSERT <wa_comp> INTO TABLE lt_comp_count.
       ELSE.
         DELETE lt_keys_components INDEX lv_tabix.
@@ -4862,10 +4849,17 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       "select count(*) from @ct_data as a group by 不可用,被迫用collect统计明细数量，
       "为了速度考虑，最好是从外部传值进来
       LOOP AT ct_data ASSIGNING <wa_line>.
-        <line_count> = CORRESPONDING #( <wa_line> ).
-        ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <line_count> TO <wa_value>.
-        <wa_value> = 1.
-        COLLECT <line_count> INTO <table_count>.
+        read_table <wa_line> <table_count> <line_count>.
+        IF sy-subrc = 0.
+          ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <line_count> TO <wa_value>.
+          <wa_value> += 1.
+        ELSE.
+          ASSIGN lo_data->* TO <line_count>.
+          <line_count> = CORRESPONDING #( <wa_line> ).
+          ASSIGN COMPONENT 'GROUP_COUNT' OF STRUCTURE <line_count> TO <wa_value>.
+          <wa_value> = 1.
+          INSERT <line_count> INTO <table_count> INDEX sy-tabix.
+        ENDIF.
       ENDLOOP.
     ELSE.
       ASSIGN ct_count TO <table_count>.

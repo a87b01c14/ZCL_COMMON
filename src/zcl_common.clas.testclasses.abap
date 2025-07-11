@@ -16,7 +16,7 @@ CLASS lc_test_runtime DEFINITION FOR TESTING RISK LEVEL HARMLESS DURATION SHORT 
       test_std_without_key                 FOR TESTING,
       test_std_with_key                    FOR TESTING,
       test_std_without_key_order           FOR TESTING,
-      test_simple_sort_without_key         FOR TESTING,
+      test_simple_sort_with_key            FOR TESTING,
       init_data
         CHANGING ct_data TYPE INDEX TABLE.
 
@@ -63,9 +63,7 @@ CLASS lc_test_runtime IMPLEMENTATION.
                                         exp   = 0
                                         level = 0 ).
     ASSIGN lr_data->* TO <fs_group>.
-    LOOP AT <fs_group> INTO ls_group.
-      lv_count += ls_group-group_count.
-    ENDLOOP.
+    lv_count = REDUCE #( INIT i = 0 FOR wa_group IN <fs_group> NEXT i += wa_group-group_count ).
     cl_abap_unit_assert=>assert_equals( act   = lv_count
                                         exp   = 100
                                         level = 0 ).
@@ -111,9 +109,7 @@ CLASS lc_test_runtime IMPLEMENTATION.
                                         exp   = 0
                                         level = 0 ).
     ASSIGN lr_data->* TO <fs_group>.
-    LOOP AT <fs_group> INTO ls_group.
-      lv_count += ls_group-group_count.
-    ENDLOOP.
+    lv_count = REDUCE #( INIT i = 0 FOR wa_group IN <fs_group> NEXT i += wa_group-group_count ).
     cl_abap_unit_assert=>assert_equals( act   = lv_count
                                         exp   = 100
                                         level = 0 ).
@@ -158,9 +154,7 @@ CLASS lc_test_runtime IMPLEMENTATION.
                                         exp   = 0
                                         level = 0 ).
     ASSIGN lr_data->* TO <fs_group>.
-    LOOP AT <fs_group> INTO ls_group.
-      lv_count += ls_group-group_count.
-    ENDLOOP.
+    lv_count = REDUCE #( INIT i = 0 FOR wa_group IN <fs_group> NEXT i += wa_group-group_count ).
     cl_abap_unit_assert=>assert_equals( act   = lv_count
                                         exp   = 100
                                         level = 0 ).
@@ -220,7 +214,7 @@ CLASS lc_test_runtime IMPLEMENTATION.
 
   ENDMETHOD.
 
-  METHOD test_simple_sort_without_key.
+  METHOD test_simple_sort_with_key.
     TYPES: BEGIN OF ty_data,
              id    TYPE i,
              group TYPE i,
@@ -244,13 +238,10 @@ CLASS lc_test_runtime IMPLEMENTATION.
     DATA lr_data TYPE REF TO data.
     FIELD-SYMBOLS <fs_group> TYPE tty_group.
 
-    lt_keys = VALUE #( ( 'GROUP' ) ).
-
     init_data( CHANGING ct_data = lt_data ).
 
     zcl_common=>split_group_simple( EXPORTING  iv_size        = 10
                                                iv_keep_order  = abap_false
-                                               it_keys        = lt_keys
                                     CHANGING   ct_data        = lt_data
                                                cr_data        = lr_data
                                     EXCEPTIONS keys_not_found = 1 ).
@@ -258,9 +249,7 @@ CLASS lc_test_runtime IMPLEMENTATION.
                                         exp   = 0
                                         level = 0 ).
     ASSIGN lr_data->* TO <fs_group>.
-    LOOP AT <fs_group> INTO ls_group.
-      lv_count += ls_group-group_count.
-    ENDLOOP.
+    lv_count = REDUCE #( INIT i = 0 FOR wa_group IN <fs_group> NEXT i += wa_group-group_count ).
     cl_abap_unit_assert=>assert_equals( act   = lv_count
                                         exp   = 100
                                         level = 0 ).

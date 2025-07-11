@@ -42,7 +42,7 @@ DEFINE read_table.
         all_fields assign_value &1.
     ENDCASE.
   ENDLOOP.
-  READ TABLE &2 TRANSPORTING NO FIELDS WITH KEY
+  READ TABLE &2 ASSIGNING &3 WITH KEY
    (lv_fname1) = <wa_value1>
    (lv_fname2) = <wa_value2>
    (lv_fname3) = <wa_value3>
@@ -67,7 +67,7 @@ DEFINE read_table.
 END-OF-DEFINITION.
 
 DEFINE add_data.
-  read_table &1 ct_data.
+  read_table &1 ct_data <wa_line>.
   LOOP AT ct_data ASSIGNING <wa_line> FROM sy-tabix.
       CLEAR lv_exit_flag.
       LOOP AT lt_keys_components ASSIGNING <wa_key_comp>.
