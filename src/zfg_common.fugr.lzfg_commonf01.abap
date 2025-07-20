@@ -50,6 +50,11 @@ ENDFORM.
 *----------------------------------------------------------------------*
 FORM frm_show_excel .
   DATA: has TYPE i.
+  DATA:
+    l_fullpath      TYPE string,
+    l_filename      TYPE string,
+    lt_file_content TYPE cpt_x255,
+    lv_file_size    TYPE i.
   CHECK NOT cl_writer IS BOUND.
   IF g_xlsm = 'X'.
     CREATE OBJECT cl_writer TYPE zcl_excel_writer_xlsm.
@@ -58,6 +63,40 @@ FORM frm_show_excel .
   ENDIF.
 
   xdata = cl_writer->write_file( cl_excel ).
+  IF g_autosave = abap_true.
+    CLEAR lt_file_content.
+    cl_scp_change_db=>xstr_to_xtab(
+      EXPORTING
+        im_xstring = xdata
+      IMPORTING
+        ex_xtab    = lt_file_content
+        ex_size    = lv_file_size
+    ).
+
+
+    IF g_filename IS NOT INITIAL.
+      l_filename =  g_filename && '.XLSX'.
+    ELSE.
+      l_filename = 'Export.XLSX'.
+    ENDIF.
+*
+    l_fullpath = zcl_common=>save_file_dialog( iv_filename = CONV #( l_filename ) ).
+
+
+    CHECK l_fullpath IS NOT INITIAL.
+    cl_gui_frontend_services=>gui_download(
+      EXPORTING
+        bin_filesize      = xstrlen( xdata )
+*       FILENAME          = |{ LS_DATA-FILE_NAME }.{ LS_DATA-FILE_EXTE }|
+        filename          = l_fullpath
+        filetype          = 'BIN'
+        confirm_overwrite = abap_true
+      IMPORTING
+        filelength        = DATA(lv_length)
+      CHANGING
+        data_tab          = lt_file_content
+    ).
+  ENDIF.
   t_rawdata = cl_bcs_convert=>xstring_to_solix( iv_xstring = xdata ).
   bytecount = xstrlen( xdata ).
 
@@ -65,7 +104,7 @@ FORM frm_show_excel .
                                                                    error   = error
                                                                    retcode = retcode ).
   PERFORM handle_error USING 'X'.
-  cl_control->init_control( EXPORTING  inplace_enabled       = 'X'
+  cl_control->init_control( EXPORTING  inplace_enabled       = ''
                                        no_flush              = 'X'
                                        inplace_show_toolbars = ''
                                        r3_application_name   = 'Document Container'

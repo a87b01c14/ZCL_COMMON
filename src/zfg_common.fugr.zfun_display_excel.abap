@@ -4,6 +4,7 @@ FUNCTION zfun_display_excel.
 *"  IMPORTING
 *"     VALUE(IV_XLSM) TYPE  CHAR1 OPTIONAL
 *"     VALUE(IV_AUTOPRINT) TYPE  CHAR1 OPTIONAL
+*"     VALUE(IV_AUTOSAVE) TYPE  CHAR1 OPTIONAL
 *"     VALUE(IV_FILENAME) TYPE  STRING OPTIONAL
 *"     REFERENCE(IO_EXCEL) TYPE REF TO  ZCL_EXCEL
 *"  EXCEPTIONS
@@ -14,6 +15,7 @@ FUNCTION zfun_display_excel.
   g_filename = iv_filename.
   g_xlsm = iv_xlsm.
   g_autoprint = iv_autoprint.
+  g_autosave  = iv_autosave.
   CALL SCREEN 300.
 
 

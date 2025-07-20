@@ -22,6 +22,7 @@ DATA: cl_writer   TYPE REF TO zif_excel_writer,
       cl_excel    TYPE REF TO zcl_excel,
       g_xlsm      TYPE char1,
       g_autoprint TYPE char1,
+      g_autosave  TYPE char1,
       g_filename  TYPE string.
 DATA:error          TYPE REF TO i_oi_error,
      t_errors       TYPE STANDARD TABLE OF REF TO i_oi_error WITH NON-UNIQUE DEFAULT KEY,

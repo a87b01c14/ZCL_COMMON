@@ -1,39 +1,41 @@
-class ZCL_EXCEL_TEMPLATE_DATA definition
-  public
-  final
-  create public .
+CLASS zcl_excel_template_data DEFINITION
+  PUBLIC
+  FINAL
+  CREATE PUBLIC .
 
-public section.
+  PUBLIC SECTION.
 
-  types:
-    tt_sheet_titles TYPE STANDARD TABLE OF zexcel_sheet_title WITH DEFAULT KEY .
-  types:
-    BEGIN OF ts_template_data_sheet,
-             sheet TYPE zexcel_sheet_title,
-             data  TYPE REF TO data,
-           END OF ts_template_data_sheet .
-  types:
-    tt_template_data_sheets TYPE STANDARD TABLE OF ts_template_data_sheet WITH DEFAULT KEY .
+    TYPES:
+      tt_sheet_titles TYPE STANDARD TABLE OF zexcel_sheet_title WITH DEFAULT KEY .
+    TYPES:
+      BEGIN OF ts_template_data_sheet,
+        sheet  TYPE zexcel_sheet_title,
+        rename TYPE zexcel_sheet_title, "重命名
+        clone  TYPE abap_bool, "是否复制sheet
+        data   TYPE REF TO data,
+      END OF ts_template_data_sheet .
+    TYPES:
+      tt_template_data_sheets TYPE STANDARD TABLE OF ts_template_data_sheet WITH DEFAULT KEY .
 
-  data MT_DATA type TT_TEMPLATE_DATA_SHEETS read-only .
+    DATA mt_data TYPE tt_template_data_sheets READ-ONLY .
 
-  methods ADD
-    importing
-      !IV_SHEET type ZEXCEL_SHEET_TITLE
-      !IV_DATA type DATA .
-  methods ADD_DATA
-    importing
-      !IS_DATA type ZCL_EXCEL_TEMPLATE_DATA=>TS_TEMPLATE_DATA_SHEET .
-  methods CONSTRUCTOR
-    importing
-      !IT_DATA type ZCL_EXCEL_TEMPLATE_DATA=>TT_TEMPLATE_DATA_SHEETS optional .
+    METHODS add
+      IMPORTING
+        !iv_sheet TYPE zexcel_sheet_title
+        !iv_data  TYPE data .
+    METHODS add_data
+      IMPORTING
+        !is_data TYPE zcl_excel_template_data=>ts_template_data_sheet .
+    METHODS constructor
+      IMPORTING
+        !it_data TYPE zcl_excel_template_data=>tt_template_data_sheets OPTIONAL .
   PROTECTED SECTION.
-private section.
+  PRIVATE SECTION.
 ENDCLASS.
 
 
 
-CLASS ZCL_EXCEL_TEMPLATE_DATA IMPLEMENTATION.
+CLASS zcl_excel_template_data IMPLEMENTATION.
 
 
   METHOD add.

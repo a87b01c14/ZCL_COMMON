@@ -199,6 +199,11 @@
        <TYP>CHAR1</TYP>
       </RSIMP>
       <RSIMP>
+       <PARAMETER>IV_AUTOSAVE</PARAMETER>
+       <OPTIONAL>X</OPTIONAL>
+       <TYP>CHAR1</TYP>
+      </RSIMP>
+      <RSIMP>
        <PARAMETER>IV_FILENAME</PARAMETER>
        <OPTIONAL>X</OPTIONAL>
        <TYP>STRING</TYP>
@@ -225,6 +230,11 @@
        <PARAMETER>IV_AUTOPRINT</PARAMETER>
        <KIND>P</KIND>
        <STEXT>是否自动打印</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>IV_AUTOSAVE</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>是否自动保存</STEXT>
       </RSFDO>
       <RSFDO>
        <PARAMETER>IV_FILENAME</PARAMETER>

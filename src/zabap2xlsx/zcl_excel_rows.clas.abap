@@ -6,7 +6,8 @@
 CLASS zcl_excel_rows DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  INHERITING FROM zcl_excel_base.
 
 *"* public components of class ZCL_EXCEL_ROWS
 *"* do not include other source files here!!!
@@ -45,6 +46,7 @@ CLASS zcl_excel_rows DEFINITION
     METHODS get_max_index
       RETURNING
         VALUE(ep_index) TYPE i .
+    METHODS clone REDEFINITION.
   PROTECTED SECTION.
 *"* private components of class ZABAP_EXCEL_RANGES
 *"* do not include other source files here!!!
@@ -63,7 +65,7 @@ ENDCLASS.
 
 
 
-CLASS ZCL_EXCEL_ROWS IMPLEMENTATION.
+CLASS zcl_excel_rows IMPLEMENTATION.
 
 
   METHOD add.
@@ -85,6 +87,7 @@ CLASS ZCL_EXCEL_ROWS IMPLEMENTATION.
 
 
   METHOD constructor.
+    super->constructor( ).
 
     CREATE OBJECT rows.
 
@@ -179,4 +182,17 @@ CLASS ZCL_EXCEL_ROWS IMPLEMENTATION.
       ENDDO.
     ENDIF.
   ENDMETHOD.
+
+  METHOD clone.
+    DATA lo_excel_rows TYPE REF TO zcl_excel_rows.
+
+    CREATE OBJECT lo_excel_rows.
+
+    lo_excel_rows->rows ?= rows->clone( ).
+
+    lo_excel_rows->rows_hashed = rows_hashed.
+
+    ro_object = lo_excel_rows.
+  ENDMETHOD.
+
 ENDCLASS.
