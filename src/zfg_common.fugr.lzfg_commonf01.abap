@@ -104,7 +104,7 @@ FORM frm_show_excel .
                                                                    error   = error
                                                                    retcode = retcode ).
   PERFORM handle_error USING 'X'.
-  cl_control->init_control( EXPORTING  inplace_enabled       = ''
+  cl_control->init_control( EXPORTING  inplace_enabled       = 'X'
                                        no_flush              = 'X'
                                        inplace_show_toolbars = ''
                                        r3_application_name   = 'Document Container'
