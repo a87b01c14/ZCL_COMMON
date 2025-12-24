@@ -197,7 +197,7 @@ CLASS ZCL_EXCEL_FILL_TEMPLATE IMPLEMENTATION.
         ls_merged_cell-row_from = ls_merged_cell-row_from + cv_diff.
         ls_merged_cell-row_to = ls_merged_cell-row_to + cv_diff.
 
-        APPEND ls_merged_cell TO lt_merged_cells_result.
+        INSERT ls_merged_cell INTO TABLE lt_merged_cells_result.
 
       ENDLOOP.
 
@@ -229,7 +229,7 @@ CLASS ZCL_EXCEL_FILL_TEMPLATE IMPLEMENTATION.
 *copy rows
       IF lines( <table> ) > 1.
         lo_rows = io_sheet->get_rows( ).
-        lo_rows->copy_rows( ip_index = <ls_range>-start ip_lines = lines( <table> ) - 1 ).
+        lo_rows->copy_rows( ip_index = <ls_range>-start + cv_diff + <ls_range>-length ip_lines = lines( <table> ) - 1 ).
       ENDIF.
 
 *merge each line of data table with template
@@ -255,9 +255,18 @@ CLASS ZCL_EXCEL_FILL_TEMPLATE IMPLEMENTATION.
 *collect data
 
         APPEND LINES OF lt_tmp_cells TO lt_cells_result.
-        APPEND LINES OF lt_tmp_merged_cells TO lt_merged_cells_result.
+        INSERT LINES OF lt_tmp_merged_cells INTO TABLE lt_merged_cells_result.
 
       ENDLOOP.
+*<START>------「Add By HSYXS On 2025.12.18 14:25:56」-------</START>*
+      "特殊合并单元格处理
+      LOOP AT ct_merged_cells INTO ls_merged_cell WHERE row_from >= <ls_range>-start AND row_from <= <ls_range>-stop AND row_to > <ls_range>-stop.
+        ls_merged_cell-row_from = ls_merged_cell-row_from + cv_diff - <ls_range>-length * ( lines( <table> ) - 1 ).
+        ls_merged_cell-row_to = ls_merged_cell-row_to + cv_diff.
+        INSERT ls_merged_cell INTO TABLE lt_merged_cells_result.
+      ENDLOOP.
+*<END>--------「Add By HSYXS On 2025.12.18 14:25:56」---------</END>*
+
 
     ENDLOOP.
 
@@ -281,7 +290,7 @@ CLASS ZCL_EXCEL_FILL_TEMPLATE IMPLEMENTATION.
         ls_merged_cell-row_from = ls_merged_cell-row_from + cv_diff.
         ls_merged_cell-row_to = ls_merged_cell-row_to + cv_diff.
 
-        APPEND ls_merged_cell TO lt_merged_cells_result.
+        INSERT ls_merged_cell INTO TABLE lt_merged_cells_result.
       ENDLOOP.
 
       ct_merged_cells = lt_merged_cells_result.
@@ -302,7 +311,7 @@ CLASS ZCL_EXCEL_FILL_TEMPLATE IMPLEMENTATION.
         ls_merged_cell-row_from = ls_merged_cell-row_from + cv_diff.
         ls_merged_cell-row_to = ls_merged_cell-row_to + cv_diff.
 
-        APPEND ls_merged_cell TO lt_merged_cells_result.
+        INSERT ls_merged_cell INTO TABLE lt_merged_cells_result.
       ENDLOOP.
 
       ct_merged_cells = lt_merged_cells_result.

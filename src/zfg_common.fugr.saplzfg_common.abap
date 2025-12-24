@@ -2,6 +2,9 @@
 *   System-defined Include-files.                                 *
 *******************************************************************
   INCLUDE LZFG_COMMONTOP.                    " Global Declarations
+
+  INCLUDE ZLW61VTOP.
+
   INCLUDE LZFG_COMMONUXX.                    " Function Modules
 
 *******************************************************************

@@ -65,6 +65,54 @@
      </DOCUMENTATION>
     </item>
     <item>
+     <FUNCNAME>ZBAPI_MATERIAL_AVAILABILITY</FUNCNAME>
+     <SHORT_TEXT>物料可用性检查批量查询</SHORT_TEXT>
+     <IMPORT>
+      <RSIMP>
+       <PARAMETER>IT_MATERIAL_AVAILABILITY</PARAMETER>
+       <REFERENCE>X</REFERENCE>
+       <TYP>ZSTMATERIAL_AVAILABILITY</TYP>
+      </RSIMP>
+     </IMPORT>
+     <TABLES>
+      <RSTBL>
+       <PARAMETER>WMDVSX</PARAMETER>
+       <DBSTRUCT>BAPIWMDVS</DBSTRUCT>
+      </RSTBL>
+      <RSTBL>
+       <PARAMETER>WMDVEX</PARAMETER>
+       <DBSTRUCT>BAPIWMDVE</DBSTRUCT>
+      </RSTBL>
+      <RSTBL>
+       <PARAMETER>RETURN</PARAMETER>
+       <DBSTRUCT>BAPIRETURN</DBSTRUCT>
+       <OPTIONAL>X</OPTIONAL>
+      </RSTBL>
+     </TABLES>
+     <DOCUMENTATION>
+      <RSFDO>
+       <PARAMETER>IT_MATERIAL_AVAILABILITY</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>物料可用性检查批量查询表结构</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>WMDVSX</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>模拟需求的结构 - ATP 的 internet 信息</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>WMDVEX</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>可用性检查结果 - INTERNET ATP信息</STEXT>
+      </RSFDO>
+      <RSFDO>
+       <PARAMETER>RETURN</PARAMETER>
+       <KIND>P</KIND>
+       <STEXT>返回参数</STEXT>
+      </RSFDO>
+     </DOCUMENTATION>
+    </item>
+    <item>
      <FUNCNAME>ZBAPI_M_REVAL_CREATEPRICECHANG</FUNCNAME>
      <SHORT_TEXT>MR21价格修改</SHORT_TEXT>
      <IMPORT>
