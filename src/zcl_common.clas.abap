@@ -629,6 +629,9 @@ public section.
     importing
       value(IM_MBLNR) type MBLNR
       value(IM_MJAHR) type MJAHR
+      value(IM_BUDAT) type BUDAT default SY-DATUM
+    exporting
+      !RS_GOODSMVT_HEADRET type BAPI2017_GM_HEAD_RET
     returning
       value(RE_RET) type BAPIRET2 .
   class-methods LOCK
@@ -3669,11 +3672,12 @@ CLASS ZCL_COMMON IMPLEMENTATION.
       EXPORTING
         materialdocument    = im_mblnr    "物料凭证
         matdocumentyear     = im_mjahr    "年
-        goodsmvt_pstng_date = sy-datum
+        goodsmvt_pstng_date = im_budat
         goodsmvt_pr_uname   = sy-uname
+      IMPORTING
+        goodsmvt_headret    = rs_goodsmvt_headret
       TABLES
         return              = lt_return.
-
     LOOP AT lt_return INTO DATA(ls_return) WHERE type CA 'AEX'.
       re_ret-message = COND #( WHEN re_ret-message IS INITIAL THEN ls_return-message ELSE re_ret-message && ls_return-message ).
     ENDLOOP.
